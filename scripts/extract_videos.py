@@ -4,7 +4,6 @@
 # 3. Split video - Get only one word
 # 4. Divide video into frames with cv2 on
 
-from genericpath import isdir
 import os
 import time
 import logging
@@ -114,19 +113,69 @@ def create_collection():
         for sequence in range(num_sequences):
             os.makedirs(os.path.join(data_path, action, f"{action}-{sequence}"))
 
-def capture_vid(filename: str):
+def capture_vid(filename: str, index: int):
     cap = cv2.VideoCapture(filename)
+    frame_num = 0
+
+    # we want to capture 100 frames from each video
+    # to do this, we need to limit or increase the rate of captures
+    # if the video doesnt have 100 frames... well too bad
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration = total_frames/fps
+    print(f'Duration: {duration} FPS: {fps} Frames: {total_frames}')
+    if total_frames < 100:
+        logging.warn(f'Video: {filename} has less than 100 frames')
+
+
+    if(cap.isOpened() == False):
+        logging.warning(f'Unable to open or stream file {filename}, skipping...')
+        return
+
+    word = os.path.split(filename)[1].split('_')[0]
+    
+    while(cap.isOpened()):
+        # Capture and Read Frame
+        ret, frame = cap.read()
+
+        # Extract Region of Interest (ROI)
+        if not ret:
+            break
+
+        # Make Prediction/Detection of Datapoints Using Holistic Model
+        img, res = mp_detect_datapoints(frame, holistic)
+
+        # Draw Landmarks/Keypoints
+        draw_landmarks(img, res)
+
+        # Display Frame for 10ms
+        cv2.imshow(f"{word}", img)
+
+        # Save Datapoints in file
+        if os.path.exists(f'{PROCESSED_FILES_DIRECTORY}/{word}'):
+            dp = combine_datapoints(res)
+            file_path = os.path.join(data_path, word, str(frame_num))
+            np.save(f'{PROCESSED_FILES_DIRECTORY}/{word}/{index}/{word}_{index}_{frame_num}', dp)
+        
+        print(len(combine_datapoints(res)))
+        frame_num += 1
+
+        # Break if Press Q to Quit
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            stop_capture = True
+    # Cleanup - Close Window
+    cv2.destroyWindow(f"{word}")
+    return
 
 # Main Function
 if __name__ == '__main__':
+    init_log()
+
     # Instantiate Model with Specific Detection and Tracking Confidence
     holistic = mp_holistic.Holistic(
         min_detection_confidence=0.5, 
         min_tracking_confidence=0.5
     )
-
-    # Crop Dimensions
-    x0, x1, y0, y1 = 170, 640, 0, 300
 
     sign_list = os.listdir(SIGN_FILES_DIRECTORY)
     sign_list = sorted(sign_list)
@@ -137,74 +186,20 @@ if __name__ == '__main__':
         logging.info('Output directory already exists')
 
     for dir in sign_list:
-        if os.path.isdir(dir):
+        if os.path.isdir(f'{SIGN_FILES_DIRECTORY}/{dir}'):
             # continue inside this folder
             word_list = os.listdir(f'{SIGN_FILES_DIRECTORY}/{dir}')
             word_list = sorted(word_list)
 
-            for sign in word_list:
+            for index, sign in enumerate(word_list):
                 if not os.path.exists(f'{PROCESSED_FILES_DIRECTORY}/{dir}'):
                     os.mkdir(f'{PROCESSED_FILES_DIRECTORY}/{dir}')
-                    print(dir)
-                    print(sign)
-                else:
-                    logging.info(f'Directory for word "{dir}" already exists')
 
                 # process video here
+                if not os.path.exists(f'{PROCESSED_FILES_DIRECTORY}/{dir}/{index}'):
+                    os.mkdir(f'{PROCESSED_FILES_DIRECTORY}/{dir}/{index}')
+                capture_vid(f'{SIGN_FILES_DIRECTORY}/{dir}/{sign}', index)
+
         else:
             logging.info('File is not a directory, skipping...')
-    
-
-    # for word, timestamp in asl_words.items():
-    #     # Make directory for word
-    #     frame_num = 0
-
-    #     log_dir = os.path.join(data_path, word)
-    #     has_collection = os.path.isdir(log_dir)
-    #     if not has_collection:
-    #         os.makedirs(os.path.join(data_path, word))
-        
-    #     print(f"Recording {word} ...")
-
-    #     while(time < timestamp):
-    #         # Capture and Read Frame
-    #         _, frame = cap.read()
-
-    #         # Extract Region of Interest (ROI)
-    #         roi = frame[y0:y1, x0:x1]
-
-    #         # Make Prediction/Detection of Datapoints Using Holistic Model
-    #         img, res = mp_detect_datapoints(roi, holistic)
-
-    #         # Draw Landmarks/Keypoints
-    #         draw_landmarks(img, res)
-
-    #         # Display Frame for 10ms
-    #         cv2.imshow(f"{word}", img)
-
-    #         # Save Datapoints in file
-    #         if not has_collection:
-    #             dp = combine_datapoints(res)
-    #             file_path = os.path.join(data_path, word, str(frame_num))
-    #             np.save(file_path, dp)
-            
-    #         print(len(combine_datapoints(res)))
-    #         # Update time
-    #         time += 1/fps
-    #         frame_num += 1
-
-    #         # Break if Press Q to Quit
-    #         if cv2.waitKey(10) & 0xFF == ord('q'):
-    #             stop_capture = True
-
-    #     # Cleanup - Close Window
-    #     cv2.destroyWindow(f"{word}")
-
-    #     # Stop Collection Data
-    #     if stop_capture:
-    #         break
-    
-    # # End Capture
-    # cap.release()
-    # cv2.destroyAllWindows()
 
