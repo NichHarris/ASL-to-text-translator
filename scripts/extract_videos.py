@@ -154,10 +154,7 @@ def capture_vid(filename: str, index: int):
         # Save Datapoints in file
         if os.path.exists(f'{PROCESSED_FILES_DIRECTORY}/{word}'):
             dp = combine_datapoints(res)
-            file_path = os.path.join(data_path, word, str(frame_num))
             np.save(f'{PROCESSED_FILES_DIRECTORY}/{word}/{index}/{word}_{index}_{frame_num}', dp)
-        
-        print(len(combine_datapoints(res)))
         frame_num += 1
 
         # Break if Press Q to Quit
@@ -190,16 +187,15 @@ if __name__ == '__main__':
             # continue inside this folder
             word_list = os.listdir(f'{SIGN_FILES_DIRECTORY}/{dir}')
             word_list = sorted(word_list)
-
+            output_dir = f'{PROCESSED_FILES_DIRECTORY}/{dir}'
             for index, sign in enumerate(word_list):
-                if not os.path.exists(f'{PROCESSED_FILES_DIRECTORY}/{dir}'):
-                    os.mkdir(f'{PROCESSED_FILES_DIRECTORY}/{dir}')
+                if not os.path.exists(output_dir):
+                    os.mkdir(output_dir)
 
                 # process video here
-                if not os.path.exists(f'{PROCESSED_FILES_DIRECTORY}/{dir}/{index}'):
-                    os.mkdir(f'{PROCESSED_FILES_DIRECTORY}/{dir}/{index}')
+                if not os.path.exists(f'{output_dir}/{index}'):
+                    os.mkdir(f'{output_dir}/{index}')
                 capture_vid(f'{SIGN_FILES_DIRECTORY}/{dir}/{sign}', index)
-
         else:
             logging.info('File is not a directory, skipping...')
 
