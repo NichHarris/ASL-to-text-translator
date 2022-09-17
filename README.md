@@ -26,7 +26,7 @@ pip install -r requirements.txt
 
 ## Retrieving dataset
 
-### If you have access to the raw_videos_mp4.zip file skip this step....
+> Note: If you have access to the raw_videos_mp4.zip file skip this step....
 
 ***TODO: Add source: https://github.com/dxli94/WLASL ***
 
