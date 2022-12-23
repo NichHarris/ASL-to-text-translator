@@ -15,106 +15,149 @@ https://neptune.ai/blog/data-augmentation-in-python
 
 # pi opencv-python scipy scikit-image numpy vidaug
 
+#TODO: Fix output path 
+
 import cv2
 from vidaug import augmentors as va
 import numpy as np
 import time
+from os import listdir
 
-start_time = time.time()
+AUG_FACTOR = 50
+DATA_PATH = "./data"
 
-# Open sign language video file
-video = "./data/bye/bye_0.mp4"
-cap = cv2.VideoCapture(video)
+# Get execution time per augmentation
+def get_exec_time(aug_type, aug_ind, aug_start):
+    aug_time  = time.time() - aug_start
+    print(f"{aug_type} {aug_ind} / {AUG_FACTOR}: {aug_time}")
 
-# Calculate frames per second
-fps = cap.get(cv2.CAP_PROP_FPS)
+# Convert video to frames numpy array
+def store_frames(video):
+    # Open sign language video file
+    cap = cv2.VideoCapture(video)
 
-frames = []
-while True:
-    ret, frame = cap.read()
-    if not ret:
+    # Calculate frames per second
+    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    frames = []
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frames.append(frame)
+
+    return np.array(frames), fps
+
+
+# Pass augmentation sequence and file name
+def augment_video(seq, frames, filename, fps):
+    # Augment frames
+    aug_vid = seq(frames)
+    height, width, _ = aug_vid[0].shape
+
+    # Save augmented data
+    # Define codec and video writer (Four character code for uniquely identifying file formats)
+    fourcc = 'mp4v'
+    video_writer = cv2.VideoWriter_fourcc(*fourcc)
+
+    # Save video
+    out = cv2.VideoWriter(filename, video_writer, fps, (width, height))
+    for frame in aug_vid:
+        out.write(frame)
+    out.release()
+
+    return frames
+
+# ...
+def augmentation_sequences(frames, fps):
+    i = 0
+    _, height, width, _ = frames.shape
+
+    # Aug count: 1 (+1)
+    flip_seq = va.Sequential([ va.HorizontalFlip() ])
+    
+    i+=1
+    augment_video(flip_seq, frames, f"./test/aug_{i}.mp4", fps)
+    get_exec_time("Flip", i)
+
+    # Aug count: 7 (+3 x 2) 
+    # Spatial shear in X, Y
+    shear_seq = va.Sequential([ va.RandomShear(x=0.1, y=0.1) ])
+    for _ in range(0, 3):
+        i += 1
+        aug_frames = augment_video(shear_seq, frames, f"./test/aug_{i}.mp4", fps)
+        get_exec_time("Shear", i)
+
+        i += 1
+        augment_video(flip_seq, aug_frames, f"./test/aug_{i}.mp4", fps)
+        get_exec_time(" + Flip", i)
+
+    # Aug count: 19 (+6 x 2)
+    # Translate in X, Y 
+    translate_seq = va.Sequential([ va.RandomTranslate(x=50, y=50) ])
+    for _ in range(0, 6):
+        i += 1
+        aug_frames = augment_video(translate_seq, frames, f"./test/aug_{i}.mp4", fps)
+        get_exec_time("Translation", i)
+
+        i += 1
+        augment_video(flip_seq, aug_frames, f"./test/aug_{i}.mp4", fps)
+        get_exec_time(" + Flip", i)
+
+    # Aug count: 25 (+3 x 2)
+    # Crop video from center to specific dimensions
+    factors = [0.925, 0.95, 0.975]
+    for factor in factors:
+        center_crop_seq = va.Sequential([ va.CenterCrop(size=(int(height * factor), int(width * factor ))) ])
+    
+        i+=1    
+        aug_frames = augment_video(center_crop_seq, frames, f"./test/aug_{i}.mp4", fps)
+        get_exec_time("Center crop", i)
+
+        i += 1
+        augment_video(flip_seq, aug_frames, f"./test/aug_{i}.mp4", fps)
+        get_exec_time(" + Flip", i)
+
+    # Aug count: 49 (+12 x2)
+    # Crop video from specific corner to specific dimensions
+    corners = ['tl', 'tr', 'bl', 'br']
+    for factor in factors:
+        for corner in corners:
+            corner_crop_seq =  va.Sequential([ va.CornerCrop(size=(int(height * factor), int(width * factor )), crop_position=corner) ])
+
+            i+=1
+            aug_frames = augment_video(corner_crop_seq, frames, f"./test/aug_{i}.mp4", fps)
+            get_exec_time("Corner crop", i)
+
+            i += 1
+            augment_video(flip_seq, aug_frames, f"./test/aug_{i}.mp4", fps)
+            get_exec_time(" + Flip", i)
+
+def main():
+    start_time = time.time()
+
+    # Get all actions/gestures names
+    actions = listdir(DATA_PATH)
+    for action in actions:
+        print(f"\n--- Starting {action} augmentation ---")
+
+        # Get all filenames for augmentating each
+        videos = listdir(f"{DATA_PATH}/{action}")
+
+        # Augment video by video
+        for video in videos:
+            print(f"\n-- Augmenting video {video} --")
+
+            # Capture frames per video
+            frames, fps = store_frames(f"{DATA_PATH}/{action}/{video}")
+
+            # Augment video using frames
+            augmentation_sequences(frames, fps)
+        
         break
 
-    frames.append(frame)
+    end_time = time.time()
+    print("Data Augmentation Time (s): ", end_time - start_time)
 
-height, width, _ = frames[0].shape
-
-# Define augmentation sequences
-seq = va.Sequential([
-    # Spatial shear in X, Y
-    # va.RandomShear(x=0.05, y=0.05),
-    # va.RandomShear(x=0.075, y=0.075),
-    va.RandomShear(x=0.1, y=0.1),
-
-    # # Translate in X, Y 
-    # va.RandomTranslate(x=25, y=25),
-    # va.RandomTranslate(x=75, y=75),
-    # va.RandomTranslate(x=70, y=70),
-
-    # va.HorizontalFlip(),
-
-    # # Crop video from center and random corner
-    # va.CenterCrop(size=(int(height / 1.2), int(width / 1.2))),
-    # va.CenterCrop(size=(int(height / 1.4), int(width / 1.4))),
-    # va.CornerCrop(size=(int(height / 1.1), int(width / 1.1))),
-    # va.CornerCrop(size=(int(height / 1.15), int(width / 1.15)), crop_position='tl'),
-
-    # # Rotate with degrees - stopped working...
-    # va.RandomRotate(degrees=5),
-    # va.RandomRotate(degrees=7),
-    # va.RandomRotate(degrees=10),
-
-    # Down and up sample - not working ...
-    # va.Downsample(0.9)
-    #va.Upsample(1.1)
-])
-
-
-
-# Aug count: 3 (+3)
-# Spatial shear in X, Y
-shear_seq = va.Sequential([ va.RandomShear(x=0.1, y=0.1) ])
-
-# Aug count: 9 (+6)
-# Translate in X, Y 
-translate_seq = va.Sequential([ va.RandomTranslate(x=50, y=50) ])
-
-# Aug count: 12 (+3)
-# Crop video from center to specific dimensions
-factors = [0.925, 0.95, 0.975]
-for factor in factors:
-    center_crop_seq =  va.Sequential([ va.CenterCrop(size=(int(height * factor), int(width * factor ))) ])
-     
-    # TODO: Apply on video here...
-
-# Aug count: 24 (+12)
-# Crop video from specific corner to specific dimensions
-corners = ['tl', 'tr', 'bl', 'br']
-for factor in factors:
-    for corner in corners:
-        corner_crop_seq =  va.Sequential([ va.CornerCrop(size=(int(height * factor), int(width * factor )), crop_position=corner) ])
-
-        # TODO: Apply on video here...
-
-# Aug count: 25 (+1) -> 50 (x2)
-flip_seq = va.Sequential([ va.HorizontalFlip() ])
-
-# Augment frames
-aug_vid = flip_seq(seq(frames))
-height, width, _ = aug_vid[0].shape
-
-# Save augmented data
-# Define codec and video writer (Four character code for uniquely identifying file formats)
-fourcc = 'mp4v'
-video_writer = cv2.VideoWriter_fourcc(*fourcc)
-
-# Save video
-out = cv2.VideoWriter("./test/bye_aug_3.mp4", video_writer, fps, (width, height))
-for frame in aug_vid:
-    out.write(frame)
-out.release()
-
-    
-
-end_time = time.time()
-print("Data Generation Time: ", end_time-start_time)
+main()
