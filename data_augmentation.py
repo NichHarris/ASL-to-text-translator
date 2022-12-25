@@ -1,7 +1,6 @@
 '''
 https://github.com/okankop/vidaug
 Vidaug - video augmentation for deep learning
-pip3 install vidaug
 
 Data augmentation - alter existing training data to produce new artificial data
 -> prevents overfitting 
@@ -13,7 +12,7 @@ Data augmentation - alter existing training data to produce new artificial data
 https://neptune.ai/blog/data-augmentation-in-python
 '''
 
-# pi opencv-python scikit-image  vidaug
+# pip3.10 install opencv-python scikit-image vidaug 
 
 import cv2
 import time
@@ -138,7 +137,7 @@ def augmentation_sequences(aug_count, frames, action, fps):
     
     # i+=1
     # augment_video(temp_fit_seq, frames, action, i, fps)
-    # provide_aug_update("Downsample", i)
+    # provide_aug_update("Temporal Fit", i)
 
     return i
 
