@@ -118,75 +118,12 @@ print(processed_frames)
 # Save processed data as torch file
 # torch.save(processed_frames, f'bye_{i}.pt')
 
+# End Capture
+# cap.release()
+# cv2.destroyAllWindows()
 
 
 '''
-# Detect and Predict Data Points in img using Holistic Model
-def mp_detect_datapoints(img, model):
-    # Convert img from BGR to RGB
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    # Improve Performance by Passing img by Reference through Not Writeable
-    img.flags.writeable = False
-
-    # Process img using Holistic Model
-    res = model.process(img)
-
-    # Make img Writeable Again to Reconvert to BGR
-    img.flags.writeable = True
-
-    # Convert img back to BGR from RGB
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-
-    return img, res
-
-# Draw/Visualize Landmarks to Frame
-def draw_landmarks(img, res):
-    # Change Landmark (Blue Dot) and Connection (Red Line) Colors
-    landmark_color = mp_drawing.DrawingSpec(color=(139, 0, 0), thickness=1, circle_radius=2)
-    connection_color = mp_drawing.DrawingSpec(color=(0, 0, 139), thickness=1, circle_radius=1)
-
-    # Pose Landmarks
-    mp_drawing.draw_landmarks(img, res.pose_landmarks, mp_holistic.POSE_CONNECTIONS, landmark_color, connection_color)
-
-    # Left Hand Landmarks
-    mp_drawing.draw_landmarks(img, res.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS, landmark_color, connection_color)
-
-    # Right Hand Landmarks
-    mp_drawing.draw_landmarks(img, res.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS, landmark_color, connection_color)
-
-# Combine Landmark Datapoints (DPs)
-def combine_landmarks(results, has_visibility):
-    # Concatenate All Landmarks Datapoints into Landmarks Array
-    landmarks = []
-
-    # Return a Zero Array if Res is Empty
-    if not results:
-        # Mark Len: Pose Has 33 Lines with 4 DPs, Left and Right Have 22 Lines with 3 DPs
-        mark_len = 33 * 4 if has_visibility else 22 * 3
-        return np.zeros(mark_len)
-
-    # Add All Landmarks DPs to Array
-    for res in results.landmark:
-        # Add Each Frame to Array
-        landmarks.append(res.x)
-        landmarks.append(res.y)
-        landmarks.append(res.z)
-
-        # Only Pose Frame Includes Visibility
-        if has_visibility:
-            landmarks.append(res.visibility)
-    
-    return landmarks
-
-def combine_datapoints(res):
-    # Concatenate Collected Values into One Array
-    pose = combine_landmarks(res.pose_landmarks, True)
-    left_hand = combine_landmarks(res.left_hand_landmarks, False)
-    right_hand = combine_landmarks(res.left_hand_landmarks, False)
-
-    return np.concatenate([pose, left_hand, right_hand])
-
 # Create Folder to House Data Collections
 def create_collection():
     # Action Detection - Using Sequence of Data Frames Over Single Frame
@@ -202,81 +139,4 @@ def create_collection():
         # Folder for Each Sequence/Video
         for sequence in range(num_sequences):
             os.makedirs(os.path.join(data_path, action, f"{action}-{sequence}"))
-
-# Main Function
-def main():
-    # Instantiate Model with Specific Detection and Tracking Confidence
-    holistic = mp_holistic.Holistic(
-        min_detection_confidence=0.5, 
-        min_tracking_confidence=0.5
-    )
-
-    # Crop Dimensions
-    x0, x1, y0, y1 = 170, 640, 0, 300
-
-    # Asl Words
-    asl_words = get_asl_dict()
-
-    # Access Camera Using Open CV
-    cap = cv2.VideoCapture(video)
-
-    # Calculate time using frames
-    time, fps = 0, cap.get(cv2.CAP_PROP_FPS)
-    stop_capture = False
-
-    for word, timestamp in asl_words.items():
-        # Make directory for word
-        frame_num = 0
-
-        log_dir = os.path.join(data_path, word)
-        has_collection = os.path.isdir(log_dir)
-        if not has_collection:
-            os.makedirs(os.path.join(data_path, word))
-        
-        print(f"Recording {word} ...")
-
-        while(time < timestamp):
-            # Capture and Read Frame
-            _, frame = cap.read()
-
-            # Extract Region of Interest (ROI)
-            roi = frame[y0:y1, x0:x1]
-
-            # Make Prediction/Detection of Datapoints Using Holistic Model
-            img, res = mp_detect_datapoints(roi, holistic)
-
-            # Draw Landmarks/Keypoints
-            draw_landmarks(img, res)
-
-            # Display Frame for 10ms
-            cv2.imshow(f"{word}", img)
-
-            # Save Datapoints in file
-            if not has_collection:
-                dp = combine_datapoints(res)
-                file_path = os.path.join(data_path, word, str(frame_num))
-                np.save(file_path, dp)
-            
-            print(len(combine_datapoints(res)))
-            # Update time
-            time += 1/fps
-            frame_num += 1
-
-            # Break if Press Q to Quit
-            if cv2.waitKey(10) & 0xFF == ord('q'):
-                stop_capture = True
-
-        # Cleanup - Close Window
-        cv2.destroyWindow(f"{word}")
-
-        # Stop Collection Data
-        if stop_capture:
-            break
-    
-    # End Capture
-    cap.release()
-    cv2.destroyAllWindows()
-
-
-print(cv2.rotate())
 '''
