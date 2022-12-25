@@ -13,23 +13,21 @@ Data augmentation - alter existing training data to produce new artificial data
 https://neptune.ai/blog/data-augmentation-in-python
 '''
 
-# pi opencv-python scipy scikit-image numpy vidaug
-
-#TODO: Fix output path 
+# pi opencv-python scikit-image  vidaug
 
 import cv2
-from vidaug import augmentors as va
-import numpy as np
 import time
+import numpy as np
 from os import listdir
+from vidaug import augmentors as va
 
-AUG_FACTOR = 50
+AUG_FACTOR = 49
 DATA_PATH = "./data"
 
 # Get execution time per augmentation
-def get_exec_time(aug_type, aug_ind, aug_start):
-    aug_time  = time.time() - aug_start
-    print(f"{aug_type} {aug_ind} / {AUG_FACTOR}: {aug_time}")
+def provide_aug_update(aug_type, aug_ind):
+    # aug_time  = time.time() - aug_start
+    print(f"{aug_type} - {((aug_ind - 1) % AUG_FACTOR) + 1} / {AUG_FACTOR}")
 
 # Convert video to frames numpy array
 def store_frames(video):
@@ -47,63 +45,64 @@ def store_frames(video):
 
         frames.append(frame)
 
+    # Convert frames to numpy
     return np.array(frames), fps
 
 
 # Pass augmentation sequence and file name
-def augment_video(seq, frames, filename, fps):
+def augment_video(seq, frames, curr_folder, aug_num, fps):
     # Augment frames
     aug_vid = seq(frames)
     height, width, _ = aug_vid[0].shape
 
-    # Save augmented data
-    # Define codec and video writer (Four character code for uniquely identifying file formats)
-    fourcc = 'mp4v'
-    video_writer = cv2.VideoWriter_fourcc(*fourcc)
+    # # Save augmented data
+    # # Define codec and video writer (Four character code for uniquely identifying file formats)
+    # fourcc = 'mp4v'
+    # video_writer = cv2.VideoWriter_fourcc(*fourcc)
 
-    # Save video
-    out = cv2.VideoWriter(filename, video_writer, fps, (width, height))
-    for frame in aug_vid:
-        out.write(frame)
-    out.release()
+    # # Save video 
+    # out = cv2.VideoWriter("./test/tf-1.mp4", video_writer, fps, (width, height)) #f"{DATA_PATH}/{curr_folder}/aug_{aug_num}.mp4"
+    # for frame in aug_vid:
+    #     out.write(frame)
+    # out.release()
 
-    return frames
+    return aug_vid
 
-# ...
-def augmentation_sequences(frames, fps):
-    i = 0
+# Perform augmentation 
+def augmentation_sequences(aug_count, frames, action, fps):
+    i = aug_count
     _, height, width, _ = frames.shape
 
     # Aug count: 1 (+1)
     flip_seq = va.Sequential([ va.HorizontalFlip() ])
     
     i+=1
-    augment_video(flip_seq, frames, f"./test/aug_{i}.mp4", fps)
-    get_exec_time("Flip", i)
+    augment_video(flip_seq, frames, action, i, fps)
+    provide_aug_update("Flip", i)
 
     # Aug count: 7 (+3 x 2) 
     # Spatial shear in X, Y
     shear_seq = va.Sequential([ va.RandomShear(x=0.1, y=0.1) ])
     for _ in range(0, 3):
         i += 1
-        aug_frames = augment_video(shear_seq, frames, f"./test/aug_{i}.mp4", fps)
-        get_exec_time("Shear", i)
+        aug_frames = augment_video(shear_seq, frames, action, i, fps)
+        provide_aug_update("Shear", i)
 
         i += 1
-        augment_video(flip_seq, aug_frames, f"./test/aug_{i}.mp4", fps)
-        get_exec_time(" + Flip", i)
+        augment_video(flip_seq, aug_frames, action, i, fps)
+        provide_aug_update(" + Flip", i)
 
     # Aug count: 19 (+6 x 2)
     # Translate in X, Y 
     translate_seq = va.Sequential([ va.RandomTranslate(x=50, y=50) ])
     for _ in range(0, 6):
         i += 1
-        aug_frames = augment_video(translate_seq, frames, f"./test/aug_{i}.mp4", fps)
-        get_exec_time("Translation", i)
+        aug_frames = augment_video(translate_seq, frames, action, i, fps)
+        provide_aug_update("Translation", i)
 
         i += 1
-        augment_video(flip_seq, aug_frames, f"./test/aug_{i}.mp4", fps)
-        get_exec_time(" + Flip", i)
+        augment_video(flip_seq, aug_frames, action, i, fps)
+        provide_aug_update(" + Flip", i)
 
     # Aug count: 25 (+3 x 2)
     # Crop video from center to specific dimensions
@@ -112,12 +111,12 @@ def augmentation_sequences(frames, fps):
         center_crop_seq = va.Sequential([ va.CenterCrop(size=(int(height * factor), int(width * factor ))) ])
     
         i+=1    
-        aug_frames = augment_video(center_crop_seq, frames, f"./test/aug_{i}.mp4", fps)
-        get_exec_time("Center crop", i)
+        aug_frames = augment_video(center_crop_seq, frames, action, i, fps)
+        provide_aug_update("Center crop", i)
 
         i += 1
-        augment_video(flip_seq, aug_frames, f"./test/aug_{i}.mp4", fps)
-        get_exec_time(" + Flip", i)
+        augment_video(flip_seq, aug_frames, action, i, fps)
+        provide_aug_update(" + Flip", i)
 
     # Aug count: 49 (+12 x2)
     # Crop video from specific corner to specific dimensions
@@ -127,12 +126,21 @@ def augmentation_sequences(frames, fps):
             corner_crop_seq =  va.Sequential([ va.CornerCrop(size=(int(height * factor), int(width * factor )), crop_position=corner) ])
 
             i+=1
-            aug_frames = augment_video(corner_crop_seq, frames, f"./test/aug_{i}.mp4", fps)
-            get_exec_time("Corner crop", i)
+            aug_frames = augment_video(corner_crop_seq, frames, action, i, fps)
+            provide_aug_update("Corner crop", i)
 
             i += 1
-            augment_video(flip_seq, aug_frames, f"./test/aug_{i}.mp4", fps)
-            get_exec_time(" + Flip", i)
+            augment_video(flip_seq, aug_frames, action, i, fps)
+            provide_aug_update(" + Flip", i)
+    
+    # # Aug count: 50 (+1)
+    # temp_fit_seq = va.Sequential([ va.TemporalFit(size=48) ])
+    
+    # i+=1
+    # augment_video(temp_fit_seq, frames, action, i, fps)
+    # provide_aug_update("Downsample", i)
+
+    return i
 
 def main():
     start_time = time.time()
@@ -140,6 +148,7 @@ def main():
     # Get all actions/gestures names
     actions = listdir(DATA_PATH)
     for action in actions:
+        aug_count = 0
         print(f"\n--- Starting {action} augmentation ---")
 
         # Get all filenames for augmentating each
@@ -153,11 +162,9 @@ def main():
             frames, fps = store_frames(f"{DATA_PATH}/{action}/{video}")
 
             # Augment video using frames
-            augmentation_sequences(frames, fps)
+            aug_count = augmentation_sequences(aug_count, frames, action, fps)
         
-        break
-
     end_time = time.time()
-    print("Data Augmentation Time (s): ", end_time - start_time)
+    print("\nTotal Data Augmentation Time (s): ", end_time - start_time)
 
 main()

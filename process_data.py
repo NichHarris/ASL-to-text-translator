@@ -22,6 +22,19 @@ import mediapipe as mp
 import torch
 from matplotlib import pyplot as plt
 
+'''
+TO WATCH:
+ https://www.youtube.com/watch?v=kM5jEGsRa4I
+ https://www.youtube.com/watch?v=4mgFV3ADMn4
+ https://imgaug.readthedocs.io/en/latest/source/examples_basics.html
+ https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/?fbclid=IwAR0K_mPBfzMJklpK0h5U06vXd3nXq0flN8eMsSxwE5y_xcNJSQ1g5ogLMa0
+
+
+ Add path to Finder
+ defaults write com.apple.finder "ShowPathbar" -bool "true"
+'''
+
+
 # pi matplotlib torch torchvision mediapipe
 
 # Get Mediapipe holistic solution
@@ -33,7 +46,7 @@ holistic = mp_holistic.Holistic(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5) 
 
-# Open sign language video file
+# Open sign language video filega
 video = "./data/bye/bye_0.mp4"
 cap = cv2.VideoCapture(video)
 
