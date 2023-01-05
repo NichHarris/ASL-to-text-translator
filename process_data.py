@@ -27,13 +27,13 @@ from os import listdir, makedirs, path
 
 DATA_PATH = "./data"
 PREPROCESS_PATH = "./preprocess"
+NUM_LANDMARKS = 174 # 21*3 * 2 + 12 * 4
 
 def processing_data(cap, holistic):
     # Initialize pose and left/right hand tensors
-    left_hand, right_hand, pose = torch.zeros(21, 3), torch.zeros(21, 3), torch.zeros(12, 4)
+    left_hand, right_hand, pose = torch.zeros(21 * 3), torch.zeros(21 * 3), torch.zeros(12 * 4)
 
     processed_frames = []
-    # processed_frames = torch.zeros(48, 54, 3)
 
     while(True):
         # Capture and read frame
@@ -56,30 +56,32 @@ def processing_data(cap, holistic):
         # No hand detected
         if not results.left_hand_landmarks:
             #print("No left hand detected...")
-            left_hand = torch.zeros(21, 3)
+            left_hand = torch.zeros(21 * 3)
         # Hand detected
         else:
             # Add hand keypoints (21 w/ 3d coordinates)
             lh = results.left_hand_landmarks
             for i, landmark in enumerate(lh.landmark):
-                left_hand[i, 0] = landmark.x
-                left_hand[i, 1] = landmark.y
-                left_hand[i, 2] = landmark.z            
+                shift_ind = i * 3
+                left_hand[shift_ind] = landmark.x
+                left_hand[shift_ind + 1] = landmark.y
+                left_hand[shift_ind + 2] = landmark.z            
     
         if not results.right_hand_landmarks:
             #print("No right hand detected...")
-            right_hand = torch.zeros(21, 3)
+            right_hand = torch.zeros(21 * 3)
         else:
             rh = results.right_hand_landmarks
             for j, landmark in enumerate(rh.landmark):
-                right_hand[j, 0] = landmark.x
-                right_hand[j, 1] = landmark.y
-                right_hand[j, 2] = landmark.z
+                shift_ind = j * 3
+                right_hand[shift_ind] = landmark.x
+                right_hand[shift_ind + 1] = landmark.y
+                right_hand[shift_ind + 2] = landmark.z
 
         # No pose detected
         if not results.pose_landmarks:
             #print("No pose detected...")
-            pose = torch.zeros(12, 4)
+            pose = torch.zeros(12 * 4)
         # Pose detected
         else:
             # Add hand keypoints (21 w/ 3d coordinates)
@@ -88,16 +90,17 @@ def processing_data(cap, holistic):
             for k, landmark in enumerate(pl.landmark):
                 # Ignore face mesh (landmarks #1-10) and lower body (landmarks #23-33)
                 if k > 10 and k < 23:
-                    pose[k - POSE_SHIFT, 0] = landmark.x
-                    pose[k - POSE_SHIFT, 1] = landmark.y
-                    pose[k - POSE_SHIFT, 2] = landmark.z  
-                    pose[k - POSE_SHIFT, 3] = landmark.visibility  
+                    shift_ind = (k - POSE_SHIFT) * 4
+                    pose[shift_ind] = landmark.x
+                    pose[shift_ind + 1] = landmark.y
+                    pose[shift_ind + 2] = landmark.z  
+                    pose[shift_ind + 3] = landmark.visibility  
 
-        # Add processed frames
-        processed_frames.append({'left': left_hand, 'right': right_hand, 'pose': pose})
+        # Add processed frames, each as tensor
+        processed_frames.append(torch.cat([left_hand, right_hand, pose], 0))
 
     # Add frame count to processed frames
-    processed_frames.insert(0, {'no_frames': len(processed_frames)})
+    # processed_frames.insert(0, {'no_frames': len(processed_frames)})
     return processed_frames
 
 def main():
@@ -127,9 +130,10 @@ def main():
         videos = listdir(action_folder)
 
         # Preprocess video by video
-        for i, video in enumerate(videos):
+        for video in videos:
+            vid_name = video.split(".")[0]
             # Open sign language video file capture
-            print(f"\n-- Preprocessing video {video} --")
+            print(f"\n-- Preprocessing video {vid_name} --")
             cap = cv2.VideoCapture(f"{action_folder}/{video}")
 
             # Processing video using frames
@@ -137,11 +141,10 @@ def main():
             print(f"Processed: {len(processed_frames) - 1}")
 
             # Save processed data as torch file
-            # torch.save(processed_frames, f'{preprocess_folder}/{video}_{i}.pt')
+            torch.save(processed_frames, f'{preprocess_folder}/{vid_name}.pt')
 
             # Close sign language video file capture
             cap.release()
-        break
         
     end_time = time.time()
     print("\nTotal Preprocessing Time (s): ", end_time - start_time)
