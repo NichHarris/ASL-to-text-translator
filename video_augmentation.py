@@ -13,7 +13,7 @@ https://neptune.ai/blog/data-augmentation-in-python
 
 
 Video augmentation
-- Create more videos to produce a more robust deep learning model
+- Create more videos using vidaug to produce a more robust deep learning model
 
 - Horizontal flip on each augmented video (x2)
     -> For both left and right hand signers

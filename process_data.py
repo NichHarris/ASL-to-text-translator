@@ -13,6 +13,14 @@ therefore increases accuracy for determining coordinates
 - x, y, z coordinates provided
 -> X and y are normalized with respect to width and ehight of the frame
 -> Z represents depth of hand placement from camera
+
+Video to keypoints processing
+- Extract landmarks using mediapipe from augmented video dataset to produce training and testing data instances
+
+- Each video stored as an array in a single file
+    - Each frame stored as an array of mediapipe key
+    ...
+- Execution Time: 3h 52m for 5 gestures
 '''
 
 # pip3.10 install matplotlib mediapipe torch torchvision
@@ -27,13 +35,14 @@ from os import listdir, makedirs, path
 
 DATA_PATH = "./data"
 PREPROCESS_PATH = "./preprocess"
-NUM_LANDMARKS = 174 # 21*3 * 2 + 12 * 4
+NUM_LANDMARKS = 226 # 21*3 * 2 (L/R Hands) + 25 * 4 (Pose)
 
 def processing_data(cap, holistic):
-    # Initialize pose and left/right hand tensors
-    left_hand, right_hand, pose = torch.zeros(21 * 3), torch.zeros(21 * 3), torch.zeros(12 * 4)
-
+    # Store processed frames 
     processed_frames = []
+
+    # Initialize pose and left/right hand tensors
+    left_hand, right_hand, pose = torch.zeros(21 * 3), torch.zeros(21 * 3), torch.zeros(25 * 4)
 
     while(True):
         # Capture and read frame
@@ -59,7 +68,7 @@ def processing_data(cap, holistic):
             left_hand = torch.zeros(21 * 3)
         # Hand detected
         else:
-            # Add hand keypoints (21 w/ 3d coordinates)
+            # Add left hand keypoints (21 w/ 3d coordinates)
             lh = results.left_hand_landmarks
             for i, landmark in enumerate(lh.landmark):
                 shift_ind = i * 3
@@ -71,6 +80,7 @@ def processing_data(cap, holistic):
             #print("No right hand detected...")
             right_hand = torch.zeros(21 * 3)
         else:
+            # Add right hand keypoints (21 w/ 3d coordinates)
             rh = results.right_hand_landmarks
             for j, landmark in enumerate(rh.landmark):
                 shift_ind = j * 3
@@ -81,26 +91,25 @@ def processing_data(cap, holistic):
         # No pose detected
         if not results.pose_landmarks:
             #print("No pose detected...")
-            pose = torch.zeros(12 * 4)
+            pose = torch.zeros(25 * 4)
         # Pose detected
         else:
-            # Add hand keypoints (21 w/ 3d coordinates)
+            # Add pose keypoints (25 w/ 3d coordinates plus visbility probability)
             pl = results.pose_landmarks
-            POSE_SHIFT = 11
             for k, landmark in enumerate(pl.landmark):
-                # Ignore face mesh (landmarks #1-10) and lower body (landmarks #23-33)
-                if k > 10 and k < 23:
-                    shift_ind = (k - POSE_SHIFT) * 4
-                    pose[shift_ind] = landmark.x
-                    pose[shift_ind + 1] = landmark.y
-                    pose[shift_ind + 2] = landmark.z  
-                    pose[shift_ind + 3] = landmark.visibility  
+                # Ignore lower body (landmarks #25-33)
+                if k >= 25:
+                    break
+
+                shift_ind = k * 4
+                pose[shift_ind] = landmark.x
+                pose[shift_ind + 1] = landmark.y
+                pose[shift_ind + 2] = landmark.z  
+                pose[shift_ind + 3] = landmark.visibility  
 
         # Add processed frames, each as tensor
         processed_frames.append(torch.cat([left_hand, right_hand, pose], 0))
 
-    # Add frame count to processed frames
-    # processed_frames.insert(0, {'no_frames': len(processed_frames)})
     return processed_frames
 
 def main():
@@ -132,13 +141,14 @@ def main():
         # Preprocess video by video
         for video in videos:
             vid_name = video.split(".")[0]
-            # Open sign language video file capture
             print(f"\n-- Preprocessing video {vid_name} --")
+
+            # Open sign language video file capture
             cap = cv2.VideoCapture(f"{action_folder}/{video}")
 
             # Processing video using frames
             processed_frames = processing_data(cap, holistic)
-            print(f"Processed: {len(processed_frames) - 1}")
+            print(f"Processed: {len(processed_frames)}")
 
             # Save processed data as torch file
             torch.save(processed_frames, f'{preprocess_folder}/{vid_name}.pt')
@@ -147,6 +157,6 @@ def main():
             cap.release()
         
     end_time = time.time()
-    print("\nTotal Preprocessing Time (s): ", end_time - start_time)
+    print("\nTotal Video to Landmarks Preprocessing Time (s): ", end_time - start_time)
 
 main()

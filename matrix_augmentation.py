@@ -1,7 +1,18 @@
+'''
+Perform video augmentation using rotation matrices and mediapipe coordinates
+- Augmentation performed only on original video and horizontally flipped video 
+    -> Ensure equal augmentation for left and right handed signers
+- Small angle rotations in x, y and z directions
+    -> Augmentation Factor: 3 (1, 2, 5 degrees) * 2 (+/- degrees) * 3 (x, y, z rotation) * 2 (original, horizontal aug) = 36 times per video!
+
+- Execution Time: 1m 30s for 5 signs
+'''
+
 import numpy as np
 import torch
 from math import pi, sin, cos
 from os import listdir, makedirs, path
+import time
 
 PREPROCESS_PATH = "./preprocess"
 POSE_START = 21*3*2
@@ -37,6 +48,8 @@ def collect_aug_frame(hands, pose, rotation_matrix):
     return torch.cat((aug_hands, aug_pose))
 
 def main():
+    start_time = time.time()
+
     # Perform all degree rotations in each axis
     for i, degree in enumerate(degrees):
         print(f"\n--- Starting {degree} matrix rotation ---")
@@ -69,12 +82,17 @@ def main():
 
             # Get all filenames for preprocessing each
             videos = listdir(preprocess_folder)
-            for video in videos: 
-                # Skip already augmented files
-                if video.startswith("mat_"):
-                    continue
+            for video in videos:
+                vid_prefix = video.split(".")[0]
+                vid_name, aug_num, *_ = vid_prefix.split("_")
 
+                # Skip already augmented files except for horizontally flipped videos (left and right hand equally augmented)
+                if vid_name == "mat" or (vid_name == "aug" and int(aug_num) % 49 != 1):
+                    continue
+                
                 # Load data instance
+                print(f"\n-- Matrix augmentation on {vid_prefix} --")
+           
                 frames = torch.load(f"{preprocess_folder}/{video}")
                 
                 # Store augmentated frames
@@ -97,10 +115,13 @@ def main():
 
                     z_aug_frame = collect_aug_frame(hands, pose, z_rotation_matrix)                    
                     z_frames.append(z_aug_frame)
-
+                
                 # Save augmented frames as torch files
-                # torch.save(x_frames, f'{preprocess_folder}/mat_x_{i}.pt')
-                # torch.save(y_frames, f'{preprocess_folder}/mat_y_{i}.pt')
-                # torch.save(z_frames, f'{preprocess_folder}/mat_z_{i}.pt')
+                torch.save(x_frames, f'{preprocess_folder}/mat_x_{i}.pt')
+                torch.save(y_frames, f'{preprocess_folder}/mat_y_{i}.pt')
+                torch.save(z_frames, f'{preprocess_folder}/mat_z_{i}.pt')
     
+    end_time = time.time()
+    print("\nTotal Matrix Augmentation Time (s): ", end_time - start_time)
+
 main()
