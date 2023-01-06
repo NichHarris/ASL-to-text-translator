@@ -46,6 +46,14 @@ pip install -r requirements.txt
 - This will create the numpy files with the data points from all the dataset videos
 - This will take several hours (improvements to be made to add multithreading to speed up)
 
-TODO: Continue
+# ----- #
 
+## Data augmentation
+- Perform video augmentation on videos in ./data by running `python3.10 video_augmentation.py`
+- Translate video to keypoints per frame on videos in ./data to torch files in ./preprocess by running `python3.10 process_data.py`
+- Perform keypoint matrix augmentation on torch tensor files in ./preprocess by running `python3.10 matrix_augmentation.py`
+- Fit each extracted video keypoint file to 48 frames by randomly upsampling and downsampling video from ./preprocess to ./dataset by running `python3.10 data_temporal_fit.py`
+
+
+TODO: Continue
 
