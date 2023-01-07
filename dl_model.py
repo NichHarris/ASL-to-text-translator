@@ -22,6 +22,19 @@ RNN - Recurrent Neural Network (for processing sequential data)
 
 Normalisation - ...
 
+
+Training and Validation Loss
+https://www.baeldung.com/cs/training-validation-loss-deep-learning
+
+- Validation Loss >> Training Loss: Overfitting
+- Validation Loss > Training Loss: Some overfitting
+    -> Val decrease then increase
+
+- Validation Loss < Training Loss: Some underfitting 
+- Validation Loss << Training Loss: Underfitting
+
+- Validation Loss == Training Loss: No overfit or underfit
+    -> Both decrease and stabilize
 '''
 
 
@@ -38,6 +51,8 @@ import torchvision.transforms as transforms
 
 import numpy as np
 import matplotlib.pyplot as plt
+from torch.utils.tensorboard import SummaryWriter
+import os
 
 # Define hyper parameters
 INPUT_SIZE = 226 # 226 datapoints from 67 landmarks - 21 in x,y,z per hand and 25 in x,y,z, visibility for pose
@@ -65,7 +80,7 @@ class AslNeuralNetwork(nn.Module):
 
         # Define neural network architecture and activiation function
         # Long Short Term Memory (Lstm) and Fully Connected (Fc) Layers
-        self.lstm = nn.LSTM(input_size, lstm_hidden_size, num_rnn_layers, batch_first=True) #bidirectional=True, dropout= ???
+        self.lstm = nn.LSTM(input_size, lstm_hidden_size, self.num_rnn_layers, batch_first=True) #bidirectional=True, dropout= ???
         self.fc1 = nn.Linear(lstm_hidden_size, fc_hidden_size)
         self.fc2 = nn.Linear(fc_hidden_size, fc_hidden_size)
         self.fc3 = nn.Linear(fc_hidden_size, output_size)
@@ -104,9 +119,6 @@ class AslNeuralNetwork(nn.Module):
 
         return out
 
-# TODO: Import dataset, Divide into training, validation, testing
-x_train, y_train, x_val, y_val, x_test, y_test = ''
-
 # Create device with gpu support
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -117,12 +129,15 @@ model = AslNeuralNetwork(INPUT_SIZE, LSTM_HIDDEN_SIZE, FC_HIDDEN_SIZE, OUTPUT_SI
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
-# Current data size from file: [1, 48, 226]
-# - How to consider multiple files at once for batches?
 
-# -- Train Model -- 
+
+'''
+# -- Train Model -- #
+writer = SummaryWriter()
 for epoch in range(NUM_EPOCHS):
-    for i, (keypoints, label) in enumerate(X_train):  
+    # -- Actual Training -- #
+    train_loss = 0
+    for i, (keypoints, label) in enumerate(train_loader):  
         #TODO: Check how to pass each frame for each instance
         # resized: [Batchsize, seqsize, inputsize]
         keypoints = keypoints.to(device)
@@ -137,14 +152,32 @@ for epoch in range(NUM_EPOCHS):
         loss.backward()
         optimizer.step()
 
-        # TODO: Add validation
+        # Compute training loss
+        train_loss += loss.item()
+    
+    # -- Validation -- #
+    valid_loss = 0
+    for i, (keypoints, label) in enumerate(valid_loader):  
+        #TODO: Check how to pass each frame for each instance
+        # resized: [Batchsize, seqsize, inputsize]
+        keypoints = keypoints.to(device)
+        labels = labels.to(device)
+
+        # Forward pass
+        output = model(keypoints)
+        loss = criterion(output, label)
         
-        # Verbose - Update after each epoch
-        if (i+1) % 100 == 0:
-            print (f'Epoch [{epoch+1}/{NUM_EPOCHS}], Loss: {loss.item():.4f}')
+        # Compute validation loss
+        valid_loss += loss.item()
+
+    print(f"Validation Loss: {valid_loss}")
+    print(f"Training Loss: {train_loss}")
+    writer.add_scalar('Train Loss', train_loss)
+    writer.add_scalar('Train Loss', train_loss)
 
 
-# -- Test Model -- 
+
+# -- Test Model -- #
 # Gradient computation not needed in testing phase
 with torch.no_grad():
     # TODO; Variables for f1-measure
@@ -160,3 +193,70 @@ with torch.no_grad():
         _, predicted = torch.max(outputs.data, 1)
         
         # TODO: Perform f1 measure
+'''
+
+# writer = SummaryWriter()
+# for i in range(10):
+#     writer.add_scalar('Train Loss', i, i)
+# writer.close()
+
+'''
+# Load dataset
+VIDEOS_PATH = "./data"
+DATASET_PATH = "./dataset"
+
+# Define signed words/action classes 
+word_dict = {}
+for i, sign in enumerate(os.listdir(VIDEOS_PATH)):
+    word_dict[sign] = i
+
+
+# Load dataset and labels
+dataset_files = os.listdir(DATASET_PATH)
+dataset_size = len(dataset_files)
+
+labels = []
+dataset = torch.zeros([dataset_size, 48, 226], dtype=torch.float)
+for i, filename in enumerate(dataset_files):
+    # Extract word from filename and obtain attributed index value
+    word = filename.split("_")[0]
+    index = word_dict[word]
+    labels.append(index)
+
+    # Load data instance and add to complete dataset 
+    dataset[i] = torch.load(f'{DATASET_PATH}/{filename}')  
+'''
+
+
+# test_files = os.listdir("./dataset")[:15]
+
+# temp_files = []
+# for i, test_file in enumerate(test_files):
+#     temp_files.append([])
+#     for data in torch.load(f'./dataset/{test_file}'):
+#         temp_data = []
+#         for t in data:
+#             temp_data.append(t.item())
+        
+#         temp_files[i].append(temp_data)
+
+
+# # Dataset (Size, Sequences, Inputs)
+# dataset = torch.tensor(temp_files, dtype=torch.float)
+# print(dataset.size())
+
+# # Split dataset into training, validation and testing
+
+# # Split into batches to train and validate model
+# batch_size = 10
+# batched_data = torch.split(dataset, batch_size)
+# print("SUCCESS")
+# print(batched_data[0].size())
+# print(batched_data[1].size())
+
+# t1 = torch.zeros([48, 226], dtype=torch.float)
+# for seq, data in enumerate(torch.load('test.pt')):
+#     t1[seq] = data
+
+# torch.save(t1, 'test.pt')
+print("SUCCESS")
