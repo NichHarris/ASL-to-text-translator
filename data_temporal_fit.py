@@ -9,9 +9,11 @@ import torch
 import math
 from os import listdir, path, makedirs
 
-DATA_FRAMES_LIMIT = 48
-PREPROCESS_PATH = "./preprocess"
 DATASET_PATH = "./dataset"
+PREPROCESS_PATH = "./preprocess"
+
+INPUT_SIZE = 226
+NUM_SEQUENCES = 48
 
 def main():
     start_time = time.time()
@@ -35,7 +37,7 @@ def main():
             
             # Calculate num frames over or under data frames input limit 
             num_frames = len(frames)
-            missing_frames = DATA_FRAMES_LIMIT - num_frames
+            missing_frames = NUM_SEQUENCES - num_frames
 
             if missing_frames == 0:
                 print("Data already fitted to 48 frames")
@@ -54,7 +56,7 @@ def main():
                 continue
 
             if num_frames < missing_frames:
-                factor = math.ceil(DATA_FRAMES_LIMIT / num_frames)
+                factor = math.ceil(NUM_SEQUENCES / num_frames)
                 frame_pop = list(frame_pop) * factor
             
             # Pick frames randomly to remove or duplicate based on data size
@@ -72,9 +74,14 @@ def main():
                     curr_frame = frames[frame_index]
                     frames.insert(frame_index, curr_frame)
             
+            # Adjust format to torch tensors
+            torch_frames = torch.zeros([NUM_SEQUENCES, INPUT_SIZE], dtype=torch.float)
+            for seq, frame in enumerate(frames):
+                torch_frames[seq] = frame
+            
             # Save updated frames
             print(f'Fixed: {len(frames)}')
-            torch.save(frames, f'{DATASET_PATH}/{action}_{video}')
+            torch.save(torch_frames, f'{DATASET_PATH}/{action}_{video}')
 
     end_time = time.time()
     print("\nTotal Data Temporal Fit Time (s): ", end_time - start_time)

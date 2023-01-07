@@ -80,7 +80,7 @@ class AslNeuralNetwork(nn.Module):
 
         # Define neural network architecture and activiation function
         # Long Short Term Memory (Lstm) and Fully Connected (Fc) Layers
-        self.lstm = nn.LSTM(input_size, lstm_hidden_size, self.num_rnn_layers, batch_first=True) #bidirectional=True, dropout= ???
+        self.lstm = nn.LSTM(input_size, lstm_hidden_size, self.num_lstm_layers, batch_first=True) #bidirectional=True, dropout= ???
         self.fc1 = nn.Linear(lstm_hidden_size, fc_hidden_size)
         self.fc2 = nn.Linear(fc_hidden_size, fc_hidden_size)
         self.fc3 = nn.Linear(fc_hidden_size, output_size)
@@ -93,7 +93,6 @@ class AslNeuralNetwork(nn.Module):
         
         # Look into dropout later
         # self.dropout = nn.Dropout()
-
 
     # Define forward pass, passing input x
     def forward(self, x):
@@ -131,9 +130,41 @@ optimizer = optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
 
 
+# -- Constants -- #
+VIDEOS_PATH = './data'
+DATASET_PATH = './dataset'
+DATASET_FILES = os.listdir(DATASET_PATH)
+DATASET_SIZE = len(DATASET_FILES)
+
+TRAIN_SPLIT = int(DATASET_SIZE * 0.9)
+TEST_SPLIT = DATASET_SIZE - TRAIN_SPLIT #(DATASET_SIZE * 0.1)
+
+ACTUAL_TRAIN_SPLIT = int(TRAIN_SPLIT * 0.8)
+VALID_SPLIT = TRAIN_SPLIT - ACTUAL_TRAIN_SPLIT #(TRAIN_SPLIT * 0.2)
+
+BATCH_SIZE = 10
+
+# Define signed words/action classes 
+word_dict = {}
+for i, sign in enumerate(os.listdir(VIDEOS_PATH)):
+    word_dict[sign] = i
+
+# -- Load dataset -- #
+dataset = SignLanguageGestureDataset(DATASET_PATH, DATASET_FILES, word_dict)
+
+# Split into training, validation and testing sets
+train_split, test_split = torch.utils.data.random_split(dataset, [TRAIN_SPLIT, TEST_SPLIT])
+train_split, valid_split = torch.utils.data.random_split(train_split, [ACTUAL_TRAIN_SPLIT, VALID_SPLIT])
+
+# Define train, valid, test data loaders
+train_loader = DataLoader(dataset=train_split, batch_size=BATCH_SIZE, shuffle=True)
+valid_loader = DataLoader(dataset=valid_split, batch_size=BATCH_SIZE, shuffle=True)
+test_loader = DataLoader(dataset=test_split, batch_size=BATCH_SIZE, shuffle=True)
+
+
+
 '''
 # -- Train Model -- #
-writer = SummaryWriter()
 for epoch in range(NUM_EPOCHS):
     # -- Actual Training -- #
     train_loss = 0
@@ -172,9 +203,6 @@ for epoch in range(NUM_EPOCHS):
 
     print(f"Validation Loss: {valid_loss}")
     print(f"Training Loss: {train_loss}")
-    writer.add_scalar('Train Loss', train_loss)
-    writer.add_scalar('Train Loss', train_loss)
-
 
 
 # -- Test Model -- #
@@ -193,70 +221,9 @@ with torch.no_grad():
         _, predicted = torch.max(outputs.data, 1)
         
         # TODO: Perform f1 measure
-'''
 
 # writer = SummaryWriter()
 # for i in range(10):
 #     writer.add_scalar('Train Loss', i, i)
 # writer.close()
-
 '''
-# Load dataset
-VIDEOS_PATH = "./data"
-DATASET_PATH = "./dataset"
-
-# Define signed words/action classes 
-word_dict = {}
-for i, sign in enumerate(os.listdir(VIDEOS_PATH)):
-    word_dict[sign] = i
-
-
-# Load dataset and labels
-dataset_files = os.listdir(DATASET_PATH)
-dataset_size = len(dataset_files)
-
-labels = []
-dataset = torch.zeros([dataset_size, 48, 226], dtype=torch.float)
-for i, filename in enumerate(dataset_files):
-    # Extract word from filename and obtain attributed index value
-    word = filename.split("_")[0]
-    index = word_dict[word]
-    labels.append(index)
-
-    # Load data instance and add to complete dataset 
-    dataset[i] = torch.load(f'{DATASET_PATH}/{filename}')  
-'''
-
-
-# test_files = os.listdir("./dataset")[:15]
-
-# temp_files = []
-# for i, test_file in enumerate(test_files):
-#     temp_files.append([])
-#     for data in torch.load(f'./dataset/{test_file}'):
-#         temp_data = []
-#         for t in data:
-#             temp_data.append(t.item())
-        
-#         temp_files[i].append(temp_data)
-
-
-# # Dataset (Size, Sequences, Inputs)
-# dataset = torch.tensor(temp_files, dtype=torch.float)
-# print(dataset.size())
-
-# # Split dataset into training, validation and testing
-
-# # Split into batches to train and validate model
-# batch_size = 10
-# batched_data = torch.split(dataset, batch_size)
-# print("SUCCESS")
-# print(batched_data[0].size())
-# print(batched_data[1].size())
-
-# t1 = torch.zeros([48, 226], dtype=torch.float)
-# for seq, data in enumerate(torch.load('test.pt')):
-#     t1[seq] = data
-
-# torch.save(t1, 'test.pt')
-print("SUCCESS")
