@@ -54,6 +54,10 @@ import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 import os
 
+from torch.utils.data import Dataset, DataLoader
+
+from custom_dataset import SignLanguageGestureDataset
+
 # Define hyper parameters
 INPUT_SIZE = 226 # 226 datapoints from 67 landmarks - 21 in x,y,z per hand and 25 in x,y,z, visibility for pose
 SEQUENCE_LEN = 48 # 48 frames per video
@@ -129,7 +133,6 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
 
-
 # -- Constants -- #
 VIDEOS_PATH = './data'
 DATASET_PATH = './dataset'
@@ -161,22 +164,18 @@ train_loader = DataLoader(dataset=train_split, batch_size=BATCH_SIZE, shuffle=Tr
 valid_loader = DataLoader(dataset=valid_split, batch_size=BATCH_SIZE, shuffle=True)
 test_loader = DataLoader(dataset=test_split, batch_size=BATCH_SIZE, shuffle=True)
 
-
-
-'''
 # -- Train Model -- #
 for epoch in range(NUM_EPOCHS):
     # -- Actual Training -- #
     train_loss = 0
-    for i, (keypoints, label) in enumerate(train_loader):  
-        #TODO: Check how to pass each frame for each instance
-        # resized: [Batchsize, seqsize, inputsize]
+    for i, (keypoints, labels) in enumerate(train_loader):
+        # Use GPU for model training computations  
         keypoints = keypoints.to(device)
         labels = labels.to(device)
 
         # Forward pass
         output = model(keypoints)
-        loss = criterion(output, label)
+        loss = criterion(output, labels)
         
         # Back propagation
         optimizer.zero_grad()
@@ -185,24 +184,24 @@ for epoch in range(NUM_EPOCHS):
 
         # Compute training loss
         train_loss += loss.item()
-    
+
     # -- Validation -- #
     valid_loss = 0
-    for i, (keypoints, label) in enumerate(valid_loader):  
-        #TODO: Check how to pass each frame for each instance
-        # resized: [Batchsize, seqsize, inputsize]
+    for i, (keypoints, labels) in enumerate(valid_loader):  
+        # Use GPU for model training computations  
         keypoints = keypoints.to(device)
         labels = labels.to(device)
 
         # Forward pass
         output = model(keypoints)
-        loss = criterion(output, label)
+        loss = criterion(output, labels)
         
         # Compute validation loss
         valid_loss += loss.item()
 
     print(f"Validation Loss: {valid_loss}")
     print(f"Training Loss: {train_loss}")
+    # TODO: Add graphing training and validation
 
 
 # -- Test Model -- #
@@ -222,8 +221,23 @@ with torch.no_grad():
         
         # TODO: Perform f1 measure
 
+'''
+# -- Save Model -- #
+MODEL_PATH = "./model"
+MODEL_VERSION = "v1.0"
+torch.save(model.state_dict(), f'{MODEL_PATH}/asl_model_{MODEL_VERSION}.pth')
+
+
+# -- Load Model -- #
+model_state_dict = torch.load(f'{MODEL_PATH}/asl_model_{MODEL_VERSION}.pth')
+model.load_state_dict(model_state_dict)
+
+# Can also store optimizer state dict
+# optimizer.load_state_dict(optimizer_state_dict)
+'''
+
+# -- Trying to plot in Tensorboard -- #
 # writer = SummaryWriter()
 # for i in range(10):
 #     writer.add_scalar('Train Loss', i, i)
 # writer.close()
-'''
