@@ -65,7 +65,7 @@ NUM_RNN_LAYERS = 3 # 3 LSTM Layers
 
 LSTM_HIDDEN_SIZE = 128 # 128 nodes in LSTM hidden layers
 FC_HIDDEN_SIZE = 64 # 64 nodes in Fc hidden layers
-OUTPUT_SIZE = 5 # Starting with 5 classes
+OUTPUT_SIZE = 5 # Starting with 5 classes = len(word_dict)
 
 # TODO: Determine batch size and num epochs
 LEARNING_RATE = 0.001
@@ -89,7 +89,7 @@ class AslNeuralNetwork(nn.Module):
         self.fc2 = nn.Linear(fc_hidden_size, fc_hidden_size)
         self.fc3 = nn.Linear(fc_hidden_size, output_size)
         self.relu = nn.LeakyReLU()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=1)
 
         # For bidirectional LSTMs
         # self.lstm = nn.LSTM(input_size, lstm_hidden_size, num_hidden, batch_first=True, bidirectional=True) 
@@ -132,7 +132,6 @@ model = AslNeuralNetwork(INPUT_SIZE, LSTM_HIDDEN_SIZE, FC_HIDDEN_SIZE, OUTPUT_SI
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
-
 # -- Constants -- #
 VIDEOS_PATH = './data'
 DATASET_PATH = './dataset'
@@ -164,8 +163,13 @@ train_loader = DataLoader(dataset=train_split, batch_size=BATCH_SIZE, shuffle=Tr
 valid_loader = DataLoader(dataset=valid_split, batch_size=BATCH_SIZE, shuffle=True)
 test_loader = DataLoader(dataset=test_split, batch_size=BATCH_SIZE, shuffle=True)
 
+train_size = len(train_loader)
+valid_size = len(valid_loader)
+
 # -- Train Model -- #
 for epoch in range(NUM_EPOCHS):
+    print(f'--- Starting Epoch #{epoch} ---')
+
     # -- Actual Training -- #
     train_loss = 0
     for i, (keypoints, labels) in enumerate(train_loader):
@@ -184,11 +188,16 @@ for epoch in range(NUM_EPOCHS):
 
         # Compute training loss
         train_loss += loss.item()
+        if (i + 1) % 50 == 0:
+            print(f"Training Loss on {i + 1}/{train_size}: {train_loss/50}")
+            train_loss = 0
+
 
     # -- Validation -- #
+    # TODO: Determine what else to do in validation section
     valid_loss = 0
     for i, (keypoints, labels) in enumerate(valid_loader):  
-        # Use GPU for model training computations  
+        # Use GPU for model validation computations  
         keypoints = keypoints.to(device)
         labels = labels.to(device)
 
@@ -198,28 +207,35 @@ for epoch in range(NUM_EPOCHS):
         
         # Compute validation loss
         valid_loss += loss.item()
-
-    print(f"Validation Loss: {valid_loss}")
-    print(f"Training Loss: {train_loss}")
-    # TODO: Add graphing training and validation
-
+        if (i + 1) % 10 == 0:
+            print(f'Validation Loss {i + 1}/{valid_size}: {valid_loss/10}')
+            valid_loss = 0
+    
+    # TODO: Add graph to track training and validation loss
 
 # -- Test Model -- #
 # Gradient computation not needed in testing phase
 with torch.no_grad():
-    # TODO; Variables for f1-measure
+    # TODO; Convert to f1-measure instead of accuracy
+    true_count = 0
+    test_count = 0
     for keypoints, labels in test_loader:
-        # TODO: Format testing instances and labels
+        # Use GPU for model testing computations  
         keypoints = keypoints.to(device)
         labels = labels.to(device)
         
         # Pass testing instances
-        outputs = model(images)
+        output = model(keypoints)
 
         # Obtain max prob value and class index
-        _, predicted = torch.max(outputs.data, 1)
+        _, predicted = torch.max(output.data, 1)
         
-        # TODO: Perform f1 measure
+        # TODO: Perform f1 measure instead
+        true_count += (predicted == labels).sum().item()
+        test_count += labels.size(0)
+    
+    model_accuracy = (true_count / test_count) * 100
+    print(f'Model Accuracy: {model_accuracy} %')
 
 '''
 # -- Save Model -- #
