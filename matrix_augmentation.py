@@ -8,17 +8,17 @@ Perform video augmentation using rotation matrices and mediapipe coordinates
 - Execution Time: 1m 30s for 5 signs
 '''
 
+# TODO: Check if visibility needs to be slightly modified as well
+
 import numpy as np
 import torch
 from math import pi, sin, cos
 from os import listdir, makedirs, path
 import time
+import random
 
 PREPROCESS_PATH = "./preprocess"
 POSE_START = 21*3*2
-
-# Convert degree to radians
-degrees = [-1, -2, -5, 1, 2, 5]
 
 def extract_hands_pose(frame):
     # Return (hands, pose) tuple for each frame
@@ -46,37 +46,124 @@ def collect_aug_frame(hands, pose, rotation_matrix):
     for x, y, z, v in zip(p_iter, p_iter, p_iter, p_iter): #100 keypoints for i in range(24)
         # aug_pose = torch.cat((aug_pose, apply_rotation(torch.tensor([x, y, z]), rotation_matrix), torch.tensor([v])))
         aug_pose[curr_ind:curr_ind + 3] = apply_rotation(torch.tensor([x, y, z]), rotation_matrix)
-        aug_pose[curr_ind + 3] = v
+        aug_pose[curr_ind + 3] = v # TODO: Modify v
         curr_ind += 4
 
     return torch.cat((aug_hands, aug_pose))
 
-def main():
-    start_time = time.time()
-
-    # Perform all degree rotations in each axis
-    for i, degree in enumerate(degrees):
-        print(f"\n--- Starting {degree} matrix rotation ---")
-        theta = degree*pi/180
-
-        # Define rotation matrix constants
-        z_rotation_matrix = torch.tensor([ 
-                [ cos(theta), -sin(theta), 0 ], 
-                [ sin(theta), cos(theta), 0 ], 
-                [ 0, 0, 1 ]
-            ])
-
-        x_rotation_matrix = torch.tensor([ 
+# Return rotation matrix with theta
+def get_rotation_matrix_x(theta):
+    return torch.tensor([ 
                 [ 1, 0, 0 ], 
                 [ 0, cos(theta), -sin(theta) ], 
                 [ 0, sin(theta), cos(theta) ]
             ])
 
-        y_rotation_matrix = torch.tensor([ 
+def get_rotation_matrix_y(theta):
+    return torch.tensor([ 
                 [ cos(theta), 0, sin(theta) ], 
                 [ 0, 1, 0], 
                 [ -sin(theta), 0, cos(theta)]
             ])
+
+def get_rotation_matrix_z(theta):
+    return torch.tensor([ 
+                [ cos(theta), -sin(theta), 0 ], 
+                [ sin(theta), cos(theta), 0 ], 
+                [ 0, 0, 1 ]
+            ])
+
+# Return translation matrix with dx, dy, dz
+def get_translation_matrix(dx, dy):
+    # Create minimal shift in z axis
+    dz = 0.0005 * random.choice([-1, 1])
+    return torch.tensor([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [dx, dy, dz, 1]
+        ])
+
+def get_rotated_frames(video, rot1_matrix, rot2_matrix): 
+    frames = torch.load(f"{preprocess_folder}/{video}")
+
+    rot1_frames, rot2_frames = [], []
+
+    # Iterate frame by frame
+    for frame in frames:
+        # Split tensor into tracked parts
+        hands = frame[0 : POSE_START]
+        pose = frame[POSE_START:]
+
+        # Augment frame using rotation matrices
+        rot1_frame = collect_aug_frame(hands, pose, rot1_matrix)
+        rot1_frames.append(rot1_frame)
+
+        rot2_frame = collect_aug_frame(hands, pose, rot2_matrix)
+        rot2_frames.append(rot2_frame)
+    
+    return rot1_frames, rot2_frames
+
+def save_rotated_frames(vid_prefix, rot1_frames, rot1_angle, rot2_frames, rot2_angle): 
+    torch.save(rot1_frames, f'{preprocess_folder}/{vid_prefix}_{rot1_angle}.pt')
+    torch.save(rot2_frames, f'{preprocess_folder}/{vid_prefix}_{rot2_angle}.pt')
+
+def main():
+    start_time = time.time()
+
+    # Multiple Translation (on Original videos - 36x)
+    shift_pcs = [-0.015, -0.01, -0.005, 0.005, 0.01, 0.015]
+
+    ct = torch.tensor([1])
+    frames = torch.load(f"{PREPROCESS_PATH}/bye/bye_0.pt")
+
+    for dx in shift_pcs:
+        for dy in shift_pcs:
+            trans_matrix = get_translation_matrix(dx, dy)
+            print(f'Shift x by: {dx}%, Shift y by: {dy}%, Shift z by: {dz}%')
+
+            for frame in frames:
+                hands, pose = extract_hands_pose(frame)
+
+                # Augmented frames
+                aug_hands, aug_pose = hands.detach().clone(), pose.detach().clone()
+
+                # Perform augmentation
+                # print(torch.cat((aug_hands, aug_pose)))
+                curr_ind = 0
+                for i in range(42):
+                    curr_ind = i*3
+
+                    # Skip undetected hands
+                    if aug_hands[curr_ind] == 0 and aug_hands[curr_ind + 1] == 0 and aug_hands[curr_ind + 2] == 0:
+                        continue
+
+                    prep_hands = torch.cat([ aug_hands[curr_ind:curr_ind + 3], ct ])
+                    aug_hands[curr_ind:curr_ind + 3] = torch.matmul(prep_hands, trans_matrix)[0:3]
+
+                for i in range(25):
+                    curr_ind = i*4
+                    prep_pose = torch.cat([ aug_pose[curr_ind:curr_ind + 3], ct ])
+                    aug_pose[curr_ind:curr_ind + 3] = torch.matmul(prep_pose, trans_matrix)[0:3]
+
+                # print(torch.cat((aug_hands, aug_pose)))
+                # for i in range(25):
+                #     curr_ind = i*4
+                #     print(aug_pose[curr_ind:curr_ind + 3] / pose[curr_ind:curr_ind + 3])
+
+    # Single Rotation (on Orig + Translated - 6x)
+    degrees = [-5, -2, -1, 1, 2, 5]
+
+    # Perform all degree rotations in each axis
+    for i, degree in enumerate(degrees):
+        # Convert degrees to radians
+        print(f"\n--- Starting {degree} matrix rotation ---")
+        theta = degree*pi/180
+
+        # Define rotation matrix constants
+        x_rotation_matrix = get_rotation_matrix_x(theta)
+        y_rotation_matrix = get_rotation_matrix_y(theta)
+        z_rotation_matrix = get_rotation_matrix_z(theta)
 
         # Get all actions/gestures names
         actions = listdir(PREPROCESS_PATH)
@@ -103,9 +190,7 @@ def main():
                 x_frames = []
                 y_frames = []
                 z_frames = []
-                xy_frames = []
-                yz_frames = []
-                zx_frames = []
+
                 
                 # Iterate frame by frame
                 for frame in frames:
@@ -126,20 +211,20 @@ def main():
                     # TODO: Currently only applying same rotation angle for 2 rotations
                     # - Make rotations on all angles
                     # Double augmment frame in 2 diff rotations
-                    x_hands, x_pose = x_aug_frame[0 : POSE_START], x_aug_frame[POSE_START:]
-                    xy_aug_frame = collect_aug_frame(x_hands, x_pose, y_rotation_matrix)
-                    xy_frames.append(xy_aug_frame)
+                    # x_hands, x_pose = x_aug_frame[0 : POSE_START], x_aug_frame[POSE_START:]
+                    # xy_aug_frame = collect_aug_frame(x_hands, x_pose, y_rotation_matrix)
+                    # xy_frames.append(xy_aug_frame)
 
-                    y_hands, y_pose = y_aug_frame[0 : POSE_START], y_aug_frame[POSE_START:]
-                    yz_aug_frame = collect_aug_frame(y_hands, y_pose, z_rotation_matrix)
-                    yz_frames.append(yz_aug_frame)
+                    # y_hands, y_pose = y_aug_frame[0 : POSE_START], y_aug_frame[POSE_START:]
+                    # yz_aug_frame = collect_aug_frame(y_hands, y_pose, z_rotation_matrix)
+                    # yz_frames.append(yz_aug_frame)
 
-                    z_hands, z_pose = z_aug_frame[0 : POSE_START], z_aug_frame[POSE_START:]
-                    zx_aug_frame = collect_aug_frame(z_hands, z_pose, x_rotation_matrix)                    
-                    zx_frames.append(zx_aug_frame)
+                    # z_hands, z_pose = z_aug_frame[0 : POSE_START], z_aug_frame[POSE_START:]
+                    # zx_aug_frame = collect_aug_frame(z_hands, z_pose, x_rotation_matrix)                    
+                    # zx_frames.append(zx_aug_frame)
                 
                 # # Save augmented frames as torch files
-                # torch.save(x_frames, f'{preprocess_folder}/mat_x_{i}.pt')
+                # torch.save(x_frames, f'{preprocess_folder}/mat_x_{i}.pt') # x={degree}
                 # torch.save(y_frames, f'{preprocess_folder}/mat_y_{i}.pt')
                 # torch.save(z_frames, f'{preprocess_folder}/mat_z_{i}.pt')
 
@@ -148,58 +233,41 @@ def main():
                 # torch.save(yz_frames, f'{preprocess_folder}/mat_yz_{i}.pt')
                 # torch.save(zx_frames, f'{preprocess_folder}/mat_zx_{i}.pt')
     
+    # Multiple Rotation (on Single Rotation - 16x)
+    small_degrees = [-2, -1, 1, 2]
+    for d1 in small_degrees:
+        for d2 in small_degrees:
+            t1 = d1*pi/180
+            t2 = d2*pi/180
+
+            vid_prefix = video.split(".")[0]
+            if 'x=' in vid_prefix:
+                y_rotation_matrix = get_rotation_matrix_y(t1)
+                z_rotation_matrix = get_rotation_matrix_z(t2)
+
+                y_aug_frames, z_aug_frames = get_rotated_frames(video, y_rotation_matrix, z_rotation_matrix)
+                save_rotated_frames(vid_prefix, y_aug_frames, f'y={d1}', z_aug_frames, f'z={d2}')
+            elif 'y=' in vid_prefix:
+                x_rotation_matrix = get_rotation_matrix_x(t1)
+                z_rotation_matrix = get_rotation_matrix_z(t2)
+
+                x_aug_frames, z_aug_frames = get_rotated_frames(video, x_rotation_matrix, z_rotation_matrix)
+                save_rotated_frames(vid_prefix, x_aug_frames, f'x={d1}', z_aug_frames, f'z={d2}')
+            elif 'z=' in vid_prefix:
+                x_rotation_matrix = get_rotation_matrix_x(t1)
+                y_rotation_matrix = get_rotation_matrix_y(t2)
+
+                x_aug_frames, y_aug_frames = get_rotated_frames(video, x_rotation_matrix, y_rotation_matrix)
+                save_rotated_frames(vid_prefix, x_aug_frames, f'x={d1}', y_aug_frames, f'y={d2}')
+            else:
+                print(vid_prefix)
+                print('Skipping this video')
+    
     end_time = time.time()
     print("\nTotal Matrix Augmentation Time (s): ", end_time - start_time)
 
 # main()
 
-
-# Translation (36x)
-shift_pcs = [-0.03, -0.02, -0.01, 0.01, 0.02, 0.03]
-
-frames = torch.load(f"{PREPROCESS_PATH}/bye/mat_x_0.pt")
-
-cz = 0.0005
-ct = torch.tensor([1])
-
-for dx in shift_pcs:
-    for dy in shift_pcs:
-        trans_matrix = torch.tensor([
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [dx, dy, cz, 1]
-        ])
-        print(f'Shift x by: {dx}, Shift y by: {dy}')
-
-        for frame in frames:
-            hands, pose = extract_hands_pose(frame)
-
-            # Augmented frames
-            aug_hands, aug_pose = hands.detach().clone(), pose.detach().clone()
-
-            # Perform augmentation
-            print(torch.cat((aug_hands, aug_pose)))
-            curr_ind = 0
-            for i in range(42):
-                curr_ind = i*3
-
-                # Skip undetected hands
-                if aug_hands[curr_ind] == 0 and aug_hands[curr_ind + 1] == 0 and aug_hands[curr_ind + 2] == 0:
-                    continue
-
-                prep_hands = torch.cat([ aug_hands[curr_ind:curr_ind + 3], ct ])
-                aug_hands[curr_ind:curr_ind + 3] = torch.matmul(prep_hands, trans_matrix)[0:3]
-
-            for i in range(25):
-                curr_ind = i*4
-                prep_pose = torch.cat([ aug_pose[curr_ind:curr_ind + 3], ct ])
-                aug_pose[curr_ind:curr_ind + 3] = torch.matmul(prep_pose, trans_matrix)[0:3]
-
-            print(torch.cat((aug_hands, aug_pose)))
-            break
-        break
-    break
 
 
         # trans_frame = []
@@ -253,20 +321,20 @@ shift_pc = 0.01
 '''
 
 
-theta = -1*pi/180
-x_rotation_matrix = torch.tensor([ 
-    [ 1, 0, 0, 0], 
-    [ 0, cos(theta), -sin(theta), 0 ], 
-    [ 0, sin(theta), cos(theta), 0 ],
-    [ 0, 0, 0, 1 ]
-])
+# theta = -1*pi/180
+# x_rotation_matrix = torch.tensor([ 
+#     [ 1, 0, 0, 0], 
+#     [ 0, cos(theta), -sin(theta), 0 ], 
+#     [ 0, sin(theta), cos(theta), 0 ],
+#     [ 0, 0, 0, 1 ]
+# ])
 
-y_rotation_matrix = torch.tensor([ 
-    [ cos(theta), 0, sin(theta), 0], 
-    [ 0, 1, 0, 0], 
-    [ -sin(theta), 0, cos(theta), 0],
-    [ 0, 0, 0, 1 ]
-])
+# y_rotation_matrix = torch.tensor([ 
+#     [ cos(theta), 0, sin(theta), 0], 
+#     [ 0, 1, 0, 0], 
+#     [ -sin(theta), 0, cos(theta), 0],
+#     [ 0, 0, 0, 1 ]
+# ])
 
 
 
