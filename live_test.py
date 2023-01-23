@@ -177,7 +177,7 @@ while not is_sign_complete:
     if len(buffer_frames) >= SIGN_BUFFER_SIZE:
         frame_count += SIGN_BUFFER_SIZE
         print(f'Fc = {frame_count}')
-        # Process every 24th frame (Once per second)
+        # Process every 12th frame (Once per second)
         processed_frame = processing_frame(frame, holistic)
         
         # Landmarks detected in frame
@@ -215,17 +215,17 @@ while not is_sign_complete:
 print('Video capture ended...')
 print(f'Final Video: {len(frames)}')
 
-# Add check to see if video is too short or too long
-# 24fps
+# TODO: Add check to see if video is too short or too long
+
+# Obtain fps (~29, expected 24)
+fps = cap.get(cv2.CAP_PROP_FPS)
        
 # Release the camera and close the window
 cap.release()
 cv2.destroyAllWindows()
 
-
-'''
-# TODO: Obtain fps, width and height
-height, width, _ = aug_vid[0].shape
+# Obtain width and height
+height, width, _ = frames[0].shape
 
 # Save augmented data
 # Define codec and video writer (Four character code for uniquely identifying file formats)
@@ -233,11 +233,13 @@ fourcc = 'mp4v'
 video_writer = cv2.VideoWriter_fourcc(*fourcc)
 
 # Save video 
-out = cv2.VideoWriter(f"{}.mp4", video_writer, fps, (width, height))
-for frame in aug_vid:
+iteration = 1
+sign_word = 'bye'
+out = cv2.VideoWriter(f"{sign_word}_{iteration}.mp4", video_writer, fps, (width, height))
+for frame in frames:
     out.write(frame)
 out.release()
-'''
+
 
 
 '''
