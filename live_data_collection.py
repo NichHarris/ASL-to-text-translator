@@ -154,7 +154,7 @@ cap = cv2.VideoCapture(0)
 holistic = get_holistic_model()
 
 iteration=1
-sign_word = 'me'
+sign_word = input('Enter sign word: ')
 while(True):
     frames = []
     buffer_frames = []
