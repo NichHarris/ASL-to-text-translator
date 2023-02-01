@@ -8,6 +8,8 @@ import urllib.request
 from pytube import YouTube
 import cv2
 
+from converter import Converter
+
 # Modified code from WLASL Github repository
 # https://github.com/dxli94/WLASL/blob/master/start_kit/video_downloader.py
 
@@ -19,7 +21,7 @@ REGULAR_COLOR = '\033[0;0m'
 FAILURE_COLOR = '\033[1;31m'
 SUCCESS_COLOR = '\033[1;32m'
 
-#pip3.10 pytube
+#pip3.10 install pytube opencv-python PythonVideoConverter
 
 def request_video(url, referer=''):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'}
@@ -59,9 +61,10 @@ def download_aslpro(url, dirname, video_id):
     data = request_video(url, referer='http://www.aslpro.com/cgi-bin/aslpro/aslpro.cgi')
     save_video(data, saveto)
 
-    # TODO: Convert swf to mp4
-    # convert_swf_mp4_cmd = f'ffmpeg -loglevel panic -i {dirname}/{video_id}.swf -vf pad="width=ceil(iw/2)*2:height=ceil(ih/2)*2" {dirname}/{video_id}.mp4'
-    # os.system(convert_swf_mp4_cmd)
+    # Convert swf to mp4
+    convert_swf_mp4_cmd = f'ffmpeg -loglevel panic -i {saveto} -vf pad="width=ceil(iw/2)*2:height=ceil(ih/2)*2" {dirname}/{video_id}.mp4'
+    os.system(convert_swf_mp4_cmd)
+    os.remove(saveto)
 
 def download_others(url, dirname, video_id):
     saveto = os.path.join(dirname, f'{video_id}.mp4')
@@ -72,7 +75,7 @@ def download_others(url, dirname, video_id):
     data = request_video(url)
     save_video(data, saveto)
 
-def download_youtube(url, dirname, video_id):
+def download_youtube(url, dirname, video_id, start_frame, end_frame):
     vid_file = os.path.join(dirname, f'{video_id}.mp4')
     if os.path.exists(vid_file):
         print(f'{video_id} exists at {dirname}')
@@ -83,30 +86,32 @@ def download_youtube(url, dirname, video_id):
     mp4_streams = yt.streams.filter(file_extension='mp4')
 
     yt_stream = mp4_streams.first()
-    yt_stream.download(output_path=dirname, filename=f'yt_{video_id}.mp4')
+    yt_stream.download(output_path=dirname, filename=f'{video_id}.mp4')
 
-    # TODO: Extract specific frame range
-    # start_frame = inst['frame_start'] - 1
-    # end_frame = inst['frame_end'] - 1
+    # Extract specific frame range
+    if start_frame != 1 or end_frame != -1:
+        print(f'Download part of video: {start_frame}, {end_frame}')
 
-    # if os.path.exists(os.path.join(saveto, video_id + '.mp4')) or os.path.exists(os.path.join(saveto, video_id + '.mkv')):
-    #     print(f'YouTube videos {url} already exists.')
-    # else:
-    #     cmd = "youtube-dl \"{}\" -o \"{}%(id)s.%(ext)s\""
-    #     cmd = cmd.format(url, saveto + os.path.sep)
+        cap = cv2.VideoCapture(vid_file)
+        count = 1
+        frames = []
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-    #     rv = os.system(cmd)
-    #     print(rv)
+            if start_frame <= count and (end_frame >= count or end_frame == -1):
+                frames.append(frame)
+            
+            count += 1
 
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        height, width, _ = frames[0].shape
 
-def select_download_method(url):
-    if 'aslpro' in url:
-        return download_aslpro
-    elif 'youtube' in url or 'youtu.be' in url:
-        return download_youtube
-    else:
-        return download_others
-
+        cap.release()
+        
+        os.remove(vid_file)
+        save_video_mp4(frames, vid_file, fps, (width, height))
 
 def download_videos(indexfile, saveto):
     print('--- Started download ---')
@@ -134,46 +139,24 @@ def download_videos(indexfile, saveto):
             for inst in instances:
                 video_url = inst['url']
                 video_id = gloss + "_" + inst['video_id']
-                print(f'video: {video_id}')
-
                 start_frame = inst['frame_start']
                 end_frame = inst['frame_end']
-                if start_frame != 1 or end_frame != -1:
-                    print(f'Download part of video: {start_frame}, {end_frame}')
-                    # download_method = select_download_method(video_url)    
-                    # download_method(video_url, new_saveto, video_id)
-                    cap = cv2.VideoCapture('./input/raw/hello/yt_hello_27171.mp4')
-                    count = 1
-                    frames = []
-                    while True:
-                        ret, frame = cap.read()
-                        if not ret:
-                            break
-
-                        if start_frame <= count and (end_frame >= count or end_frame == -1):
-                            frames.append(frame)
-                        
-                        count += 1
-
-                    fps = cap.get(cv2.CAP_PROP_FPS)
-                    height, width, _ = frames[0].shape
-
-                    cap.release()
-                    
-                    save_video_mp4(frames, './input/raw/hello/hello_27171.mp4', fps, (width, height))
-                break
-                
-                download_method = select_download_method(video_url)    
+                print(f'video: {video_id}')
 
                 try:
-                    # download_method(video_url, new_saveto, video_id)
+                    if 'aslpro' in video_url:
+                        download_aslpro(video_url, new_saveto, video_id)
+                    elif 'youtube' in video_url or 'youtu.be' in video_url:
+                        download_youtube(video_url, new_saveto, video_id, start_frame, end_frame)
+                    else:
+                        download_others(video_url, new_saveto, video_id)
 
                     sys.stdout.write(SUCCESS_COLOR)
                     print(f'Successful download - video {video_id}!\n')
                     sys.stdout.write(REGULAR_COLOR)
                 except Exception as e:
                     sys.stdout.write(FAILURE_COLOR)
-                    print(f'Failed download - video {video_id}\n')
+                    print(f'Failed download - {str(e)} for video {video_id}\n')
                     sys.stdout.write(REGULAR_COLOR)
                 
                 # Pause between video download requests
