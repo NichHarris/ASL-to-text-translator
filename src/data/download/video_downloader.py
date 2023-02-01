@@ -14,8 +14,7 @@ from converter import Converter
 # https://github.com/dxli94/WLASL/blob/master/start_kit/video_downloader.py
 
 DATASET_VIDEOS_INDEX_FILE='WLASL.json'
-SAVE_VIDEOS_FOLDER='./input/raw'
-# '../../../input/raw'
+SAVE_VIDEOS_FOLDER='../../../inputs/raw'
 
 REGULAR_COLOR = '\033[0;0m'
 FAILURE_COLOR = '\033[1;31m'
@@ -62,7 +61,8 @@ def download_aslpro(url, dirname, video_id):
     save_video(data, saveto)
 
     # Convert swf to mp4
-    convert_swf_mp4_cmd = f'ffmpeg -loglevel panic -i {saveto} -vf pad="width=ceil(iw/2)*2:height=ceil(ih/2)*2" {dirname}/{video_id}.mp4'
+    saveto_mp4 = os.path.join(dirname, f'{video_id}.mp4')
+    convert_swf_mp4_cmd = f'ffmpeg -loglevel panic -i {saveto} -vf pad="width=ceil(iw/2)*2:height=ceil(ih/2)*2" {saveto_mp4}'
     os.system(convert_swf_mp4_cmd)
     os.remove(saveto)
 
@@ -118,8 +118,10 @@ def download_videos(indexfile, saveto):
     json_file = open(indexfile)
     content = json.load(json_file)
     
-    sign_words = ['hello', 'bye', 'me/I', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'he/she/they']
-    new_sign_words = ['hello'] #['a', 'b', 'c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+    sign_words = ['hello', 'bye', 'me/I', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'he/she/they', 'bad', 'happy', 'sad', 'sorry', 'like', 'want', 'easy', 'meet', 'more', 'today']
+    new_sign_words = ['hello', 'bye', 'me', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'she']
+    # Next words: again/repeat, fine, learn, sign
+    #['a', 'b', 'c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
     # Note: c is missing in words
 
     if not os.path.exists(saveto):
@@ -128,13 +130,11 @@ def download_videos(indexfile, saveto):
     for entry in content:
         gloss = entry['gloss']
         if gloss in new_sign_words:
-            new_saveto = f'{saveto}/{gloss}'
+            new_saveto = os.path.join(saveto, gloss)
             if not os.path.exists(new_saveto):
                 os.makedirs(new_saveto)
 
-            new_saveto = f'{saveto}/{gloss}'
             print(f'-- gloss: {gloss} --')
-
             instances = entry['instances']
             for inst in instances:
                 video_url = inst['url']
