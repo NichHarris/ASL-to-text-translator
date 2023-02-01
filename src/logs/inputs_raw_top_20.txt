@@ -1,0 +1,675 @@
+--- Started download ---
+-- gloss: like --
+video: like_69389
+Requesting http://aslbricks.org/New/ASL-Videos/like.mp4
+Successful download - video like_69389!
+
+video: like_33266
+Requesting https://media.spreadthesign.com/video/mp4/13/457551.mp4
+Successful download - video like_33266!
+
+video: like_68093
+Requesting https://www.youtube.com/watch?v=0qeMFifNqC4
+Successful download - video like_68093!
+
+video: like_70299
+Requesting https://www.youtube.com/watch?v=CSj7IScvZnE
+Download part of video: 5546, 5667
+Successful download - video like_70299!
+
+video: like_33285
+Requesting http://www.aslsearch.com/signs/videos/like4.mp4
+Successful download - video like_33285!
+
+video: like_33267
+Requesting https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/like.mp4
+Successful download - video like_33267!
+
+video: like_33286
+Requesting http://www.aslsearch.com/signs/videos/like.mp4
+Successful download - video like_33286!
+
+video: like_33268
+Requesting https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20really%20like-7y5Ye-2-ZBs.mp4
+Successful download - video like_33268!
+
+video: like_33269
+Requesting https://media.asldeafined.com/vocabulary/1468711783.5361.mp4
+Successful download - video like_33269!
+
+video: like_33270
+Requesting https://media.asldeafined.com/vocabulary/1468711809.2438.mp4
+Successful download - video like_33270!
+
+video: like_33271
+Requesting https://www.handspeak.com/word/l/like.mp4
+Failed download - HTTP Error 404: Not Found for video like_33271
+
+video: like_33273
+Requesting https://www.signingsavvy.com/signs/mp4/14/14298.mp4
+Successful download - video like_33273!
+
+video: like_33274
+Requesting https://www.signingsavvy.com/signs/mp4/6/6394.mp4
+Successful download - video like_33274!
+
+video: like_33277
+Requesting https://www.youtube.com/watch?v=qK3SqANZheA
+Successful download - video like_33277!
+
+video: like_33278
+Requesting https://www.youtube.com/watch?v=SbXfT74yfDI
+Successful download - video like_33278!
+
+video: like_33279
+Requesting https://www.youtube.com/watch?v=vh7DN3usJgc
+Successful download - video like_33279!
+
+video: like_33280
+Requesting https://www.youtube.com/watch?v=vh7DN3usJgc
+Successful download - video like_33280!
+
+video: like_33281
+Requesting https://www.youtube.com/watch?v=vzUKt2pjkRI
+Successful download - video like_33281!
+
+video: like_33282
+Requesting https://www.youtube.com/watch?v=vzUKt2pjkRI
+Successful download - video like_33282!
+
+video: like_33283
+Requesting https://www.youtube.com/watch?v=xKY35YaWuLE
+Successful download - video like_33283!
+
+video: like_33284
+Requesting http://www.aslpro.com/main/l/like.swf
+Successful download - video like_33284!
+
+-- gloss: meet --
+video: meet_35506
+Requesting https://www.youtube.com/watch?v=IxO7unGawfk
+Download part of video: 865, 894
+Successful download - video meet_35506!
+
+video: meet_68099
+Requesting https://www.youtube.com/watch?v=pWFDhzkId9o
+Successful download - video meet_68099!
+
+video: meet_68974
+Requesting https://www.youtube.com/watch?v=VSBIqNFEQxI
+Failed download - VSBIqNFEQxI is unavailable for video meet_68974
+
+video: meet_35511
+Requesting https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Meet-SHPBneo_ofY.mp4
+Successful download - video meet_35511!
+
+video: meet_35512
+Requesting https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Meet-UvaayIDXkuw.mp4
+Successful download - video meet_35512!
+
+video: meet_35513
+Requesting https://media.asldeafined.com/vocabulary/1468714718.3075.mp4
+Successful download - video meet_35513!
+
+video: meet_35514
+Requesting https://www.handspeak.com/word/m/meet-me.mp4
+Failed download - HTTP Error 404: Not Found for video meet_35514
+
+video: meet_35515
+Requesting https://www.handspeak.com/word/m/meet.mp4
+Failed download - HTTP Error 404: Not Found for video meet_35515
+
+video: meet_35516
+Requesting https://www.signingsavvy.com/signs/mp4/0/517.mp4
+Successful download - video meet_35516!
+
+video: meet_35517
+Requesting https://www.signingsavvy.com/signs/mp4/5/5837.mp4
+Successful download - video meet_35517!
+
+video: meet_35518
+Requesting https://www.signingsavvy.com/signs/mp4/9/9003.mp4
+Successful download - video meet_35518!
+
+video: meet_66112
+Requesting https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/ME/MEET-1620.mp4
+Successful download - video meet_66112!
+
+video: meet_35509
+Requesting https://media.spreadthesign.com/video/mp4/13/50874.mp4
+Successful download - video meet_35509!
+
+video: meet_67886
+Requesting https://youtu.be/W4FXyEWBu4I
+Failed download - W4FXyEWBu4I is a private video for video meet_67886
+
+video: meet_35519
+Requesting https://www.youtube.com/watch?v=AsdBSknwrjg
+Successful download - video meet_35519!
+
+video: meet_35520
+Requesting https://www.youtube.com/watch?v=eP816GBFVeg
+Successful download - video meet_35520!
+
+video: meet_35521
+Requesting https://www.youtube.com/watch?v=FC1R9kyegJY
+Successful download - video meet_35521!
+
+video: meet_35522
+Requesting http://www.aslpro.com/main/m/meet.swf
+Successful download - video meet_35522!
+
+video: meet_35523
+Requesting http://www.aslsearch.com/signs/videos/meet.mp4
+Successful download - video meet_35523!
+
+-- gloss: want --
+video: want_62241
+Requesting https://www.youtube.com/watch?v=A5dihMAjeTE
+Download part of video: 297, 346
+Successful download - video want_62241!
+
+video: want_69524
+Requesting http://aslbricks.org/New/ASL-Videos/want.mp4
+Successful download - video want_69524!
+
+video: want_68178
+Requesting https://www.youtube.com/watch?v=co7zdtkJW1E
+Successful download - video want_68178!
+
+video: want_68540
+Requesting https://www.youtube.com/watch?v=I0v6P6HEGCA
+Failed download - I0v6P6HEGCA is unavailable for video want_68540
+
+video: want_62246
+Requesting https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/want.mp4
+Successful download - video want_62246!
+
+video: want_62247
+Requesting https://signstock.blob.core.windows.net/signschool/videos/SignSchool%20Want%20copy.mp4
+Successful download - video want_62247!
+
+video: want_62248
+Requesting https://media.asldeafined.com/vocabulary/1468926945.7263.mp4
+Successful download - video want_62248!
+
+video: want_62249
+Requesting https://www.handspeak.com/word/w/want.mp4
+Successful download - video want_62249!
+
+video: want_62250
+Requesting https://www.signingsavvy.com/signs/mp4/6/6971.mp4
+Successful download - video want_62250!
+
+video: want_62251
+Requesting https://www.signingsavvy.com/signs/mp4/6/6972.mp4
+Successful download - video want_62251!
+
+video: want_62253
+Requesting https://www.youtube.com/watch?v=aGzNpjV6-0I
+Successful download - video want_62253!
+
+video: want_62244
+Requesting https://media.spreadthesign.com/video/mp4/13/50936.mp4
+Successful download - video want_62244!
+
+video: want_67038
+Requesting https://youtu.be/Xl2VNuFGexI
+Failed download - Xl2VNuFGexI is a private video for video want_67038
+
+video: want_62254
+Requesting https://www.youtube.com/watch?v=aGzNpjV6-0I
+Successful download - video want_62254!
+
+video: want_62256
+Requesting https://www.youtube.com/watch?v=fBVbr5ci0EQ
+Successful download - video want_62256!
+
+video: want_62257
+Requesting https://www.youtube.com/watch?v=nI-XX3BtUlQ
+Successful download - video want_62257!
+
+video: want_62258
+Requesting http://www.aslpro.com/main/w/want.swf
+Successful download - video want_62258!
+
+video: want_62259
+Requesting http://www.aslsearch.com/signs/videos/want.mp4
+Successful download - video want_62259!
+
+video: want_62245
+Requesting https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/want-2.mp4
+Successful download - video want_62245!
+
+-- gloss: bad --
+video: bad_04694
+Requesting https://www.youtube.com/watch?v=pDqITge_TGs
+Download part of video: 347, 393
+Successful download - video bad_04694!
+
+video: bad_69219
+Requesting http://aslbricks.org/New/ASL-Videos/bad.mp4
+Successful download - video bad_69219!
+
+video: bad_04709
+Requesting https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/bad.mp4
+Successful download - video bad_04709!
+
+video: bad_04712
+Requesting https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Bad-2099RpCyLwU.mp4
+Successful download - video bad_04712!
+
+video: bad_04713
+Requesting https://signstock.blob.core.windows.net/signschool/videos/SignSchool%20bad5.mp4
+Successful download - video bad_04713!
+
+video: bad_04715
+Requesting https://media.asldeafined.com/vocabulary/1466648215.3053.mp4
+Successful download - video bad_04715!
+
+video: bad_04716
+Requesting https://www.handspeak.com/word/b/bad.mp4
+Failed download - HTTP Error 404: Not Found for video bad_04716
+
+video: bad_04717
+Requesting https://www.signingsavvy.com/signs/mp4/6/6529.mp4
+Successful download - video bad_04717!
+
+video: bad_65125
+Requesting https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/BA/BAD-29.mp4
+Successful download - video bad_65125!
+
+video: bad_04708
+Requesting https://media.spreadthesign.com/video/mp4/13/123148.mp4
+Successful download - video bad_04708!
+
+video: bad_67381
+Requesting https://youtu.be/-kgTBeOw95A
+Failed download - -kgTBeOw95A is a private video for video bad_67381
+
+video: bad_04718
+Requesting https://www.signingsavvy.com/signs/mp4/6/6944.mp4
+Successful download - video bad_04718!
+
+video: bad_04720
+Requesting https://www.youtube.com/watch?v=BUhCGlNOqRA
+Successful download - video bad_04720!
+
+video: bad_04721
+Requesting https://www.youtube.com/watch?v=prwtXZ1o2As
+Successful download - video bad_04721!
+
+video: bad_04722
+Requesting http://www.aslpro.com/main/b/bad.swf
+Successful download - video bad_04722!
+
+video: bad_04723
+Requesting http://www.aslsearch.com/signs/videos/bad.mp4
+Successful download - video bad_04723!
+
+-- gloss: happy --
+video: happy_26506
+Requesting https://www.youtube.com/watch?v=SiBub8VD5wo
+Download part of video: 465, 527
+Successful download - video happy_26506!
+
+video: happy_70284
+Requesting https://www.youtube.com/watch?v=CSj7IScvZnE
+Download part of video: 1404, 1497
+Successful download - video happy_70284!
+
+video: happy_26528
+Requesting https://www.handspeak.com/word/h/happy.mp4
+Failed download - HTTP Error 404: Not Found for video happy_26528
+
+video: happy_26530
+Requesting https://www.signingsavvy.com/signs/mp4/23/23649.mp4
+Successful download - video happy_26530!
+
+video: happy_26531
+Requesting https://www.signingsavvy.com/signs/mp4/23/23650.mp4
+Successful download - video happy_26531!
+
+video: happy_26532
+Requesting https://www.signingsavvy.com/signs/mp4/23/23651.mp4
+Successful download - video happy_26532!
+
+video: happy_26533
+Requesting https://www.youtube.com/watch?v=RYpAClHsBTM
+Successful download - video happy_26533!
+
+video: happy_26524
+Requesting https://media.spreadthesign.com/video/mp4/13/456551.mp4
+Successful download - video happy_26524!
+
+video: happy_67743
+Requesting https://youtu.be/deGERv54kIc
+Failed download - deGERv54kIc is a private video for video happy_67743
+
+video: happy_26534
+Requesting https://www.youtube.com/watch?v=SHc7_8aD9Rw
+Successful download - video happy_26534!
+
+video: happy_26535
+Requesting https://www.youtube.com/watch?v=ZXHHO_DY6_A
+Successful download - video happy_26535!
+
+video: happy_26536
+Requesting http://www.aslpro.com/main/h/happy.swf
+Successful download - video happy_26536!
+
+video: happy_26537
+Requesting http://www.aslsearch.com/signs/videos/happy.mp4
+Successful download - video happy_26537!
+
+video: happy_26525
+Requesting https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/happy.mp4
+Successful download - video happy_26525!
+
+video: happy_26526
+Requesting https://signstock.blob.core.windows.net/signschool/videos/SignSchool%20Happy.mp4
+Successful download - video happy_26526!
+
+video: happy_26527
+Requesting https://media.asldeafined.com/vocabulary/1468579583.2605.mp4
+Successful download - video happy_26527!
+
+-- gloss: more --
+video: more_36826
+Requesting https://www.youtube.com/watch?v=IxO7unGawfk
+Download part of video: 2040, 2086
+Successful download - video more_36826!
+
+video: more_69401
+Requesting http://aslbricks.org/New/ASL-Videos/more.mp4
+Successful download - video more_69401!
+
+video: more_70222
+Requesting https://www.youtube.com/watch?v=hjS0dQDgbjo
+Download part of video: 3948, 4036
+Successful download - video more_70222!
+
+video: more_36830
+Requesting https://media.asldeafined.com/vocabulary/1468716587.784.mp4
+Successful download - video more_36830!
+
+video: more_36832
+Requesting https://www.handspeak.com/word/m/more.mp4
+Failed download - HTTP Error 404: Not Found for video more_36832
+
+video: more_36834
+Requesting https://www.signingsavvy.com/signs/mp4/5/5684.mp4
+Successful download - video more_36834!
+
+video: more_67906
+Requesting https://youtu.be/eKLTlUZlE9w
+Failed download - eKLTlUZlE9w is a private video for video more_67906
+
+video: more_36836
+Requesting https://www.signingsavvy.com/signs/mp4/8/8051.mp4
+Successful download - video more_36836!
+
+video: more_36837
+Requesting https://www.youtube.com/watch?v=tPDGvZK_o_c
+Successful download - video more_36837!
+
+video: more_36838
+Requesting https://www.youtube.com/watch?v=tPDGvZK_o_c
+Successful download - video more_36838!
+
+video: more_36839
+Requesting http://www.aslpro.com/main/m/more.swf
+Successful download - video more_36839!
+
+video: more_36840
+Requesting http://www.aslsearch.com/signs/videos/more.mp4
+Successful download - video more_36840!
+
+video: more_36827
+Requesting https://media.spreadthesign.com/video/mp4/13/93968.mp4
+Successful download - video more_36827!
+
+video: more_36828
+Requesting https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/more.mp4
+Successful download - video more_36828!
+
+video: more_36829
+Requesting https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20More-J-00GUpKfFg.mp4
+Successful download - video more_36829!
+
+-- gloss: easy --
+video: easy_18301
+Requesting https://www.youtube.com/watch?v=2oaCeSdHG-A
+Download part of video: 619, 671
+Successful download - video easy_18301!
+
+video: easy_70079
+Requesting https://www.youtube.com/watch?v=jDCw7stJaM4
+Download part of video: 5665, 5741
+Successful download - video easy_70079!
+
+video: easy_68043
+Requesting https://www.youtube.com/watch?v=MAujGjrbw1A
+Successful download - video easy_68043!
+
+video: easy_68966
+Requesting https://www.youtube.com/watch?v=vlyJPZMDZUw
+Failed download - vlyJPZMDZUw is unavailable for video easy_68966
+
+video: easy_18313
+Requesting http://www.aslpro.com/main/e/easy.swf
+Successful download - video easy_18313!
+
+video: easy_18315
+Requesting http://www.aslsearch.com/signs/videos/easy.mp4
+Successful download - video easy_18315!
+
+video: easy_65600
+Requesting https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/EA/EASY-684.mp4
+Successful download - video easy_65600!
+
+video: easy_18306
+Requesting https://media.spreadthesign.com/video/mp4/13/399489.mp4
+Successful download - video easy_18306!
+
+video: easy_67609
+Requesting https://youtu.be/uhlOam0rw90
+Failed download - uhlOam0rw90 is a private video for video easy_67609
+
+video: easy_18307
+Requesting https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Easy-ibHrnI23lTc.mp4
+Successful download - video easy_18307!
+
+video: easy_18308
+Requesting https://media.asldeafined.com/vocabulary/1468347802.2280.mp4
+Successful download - video easy_18308!
+
+video: easy_18309
+Requesting https://www.handspeak.com/word/e/easy.mp4
+Failed download - HTTP Error 404: Not Found for video easy_18309
+
+video: easy_18311
+Requesting https://www.signingsavvy.com/signs/mp4/8/8403.mp4
+Successful download - video easy_18311!
+
+video: easy_18312
+Requesting https://www.youtube.com/watch?v=k5RKXRKYCrM
+Successful download - video easy_18312!
+
+-- gloss: sad --
+video: sad_48965
+Requesting https://www.youtube.com/watch?v=XB3Q6IX6CBo
+Download part of video: 24, 83
+Successful download - video sad_48965!
+
+video: sad_69450
+Requesting http://aslbricks.org/New/ASL-Videos/sad.mp4
+Successful download - video sad_69450!
+
+video: sad_48976
+Requesting https://media.asldeafined.com/vocabulary/1468762255.9874.mp4
+Successful download - video sad_48976!
+
+video: sad_48977
+Requesting https://www.handspeak.com/word/s/sad.mp4
+Failed download - HTTP Error 404: Not Found for video sad_48977
+
+video: sad_48978
+Requesting https://www.signingsavvy.com/signs/mp4/7/7167.mp4
+Successful download - video sad_48978!
+
+video: sad_48980
+Requesting https://www.youtube.com/watch?v=PF4sePzDILY
+Successful download - video sad_48980!
+
+video: sad_48971
+Requesting https://media.spreadthesign.com/video/mp4/13/50772.mp4
+Successful download - video sad_48971!
+
+video: sad_67155
+Requesting https://youtu.be/pr36F4PK-8c
+Failed download - pr36F4PK-8c is a private video for video sad_67155
+
+video: sad_48981
+Requesting https://www.youtube.com/watch?v=TqGqrDemNFU
+Successful download - video sad_48981!
+
+video: sad_48982
+Requesting http://www.aslpro.com/main/s/sad.swf
+Successful download - video sad_48982!
+
+video: sad_48983
+Requesting http://www.aslsearch.com/signs/videos/sad.mp4
+Successful download - video sad_48983!
+
+video: sad_48972
+Requesting https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/sad.mp4
+Successful download - video sad_48972!
+
+video: sad_48973
+Requesting https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Sad%202-v80n5JTnyTQ.mp4
+Successful download - video sad_48973!
+
+video: sad_48974
+Requesting https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Sad-GCyXSsozH0o.mp4
+Successful download - video sad_48974!
+
+-- gloss: sorry --
+video: sorry_53363
+Requesting https://www.youtube.com/watch?v=XB3Q6IX6CBo
+Download part of video: 6805, 6874
+Successful download - video sorry_53363!
+
+video: sorry_70225
+Requesting https://www.youtube.com/watch?v=4Nh1iFv2BMc
+Download part of video: 694, 786
+Successful download - video sorry_70225!
+
+video: sorry_53371
+Requesting https://www.signingsavvy.com/signs/mp4/6/6968.mp4
+Successful download - video sorry_53371!
+
+video: sorry_53372
+Requesting https://www.youtube.com/watch?v=jRHDjxWJma0
+Successful download - video sorry_53372!
+
+video: sorry_53373
+Requesting https://www.youtube.com/watch?v=KuqlCVeWGEI
+Successful download - video sorry_53373!
+
+video: sorry_53374
+Requesting http://www.aslpro.com/main/s/sorry.swf
+Successful download - video sorry_53374!
+
+video: sorry_66536
+Requesting https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/SO/SORRY-566.mp4
+Failed download - HTTP Error 404: Not Found for video sorry_66536
+
+video: sorry_53365
+Requesting https://media.spreadthesign.com/video/mp4/13/94029.mp4
+Successful download - video sorry_53365!
+
+video: sorry_67228
+Requesting https://youtu.be/BL90-ejIQ9Y
+Failed download - BL90-ejIQ9Y is a private video for video sorry_67228
+
+video: sorry_53375
+Requesting http://www.aslsearch.com/signs/videos/sorry.mp4
+Successful download - video sorry_53375!
+
+video: sorry_53366
+Requesting https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/sorry.mp4
+Successful download - video sorry_53366!
+
+video: sorry_53367
+Requesting https://media.asldeafined.com/vocabulary/1468776763.7085.mp4
+Successful download - video sorry_53367!
+
+video: sorry_53368
+Requesting https://www.handspeak.com/word/s/sorry.mp4
+Failed download - HTTP Error 404: Not Found for video sorry_53368
+
+video: sorry_53370
+Requesting https://www.signingsavvy.com/signs/mp4/6/6967.mp4
+Successful download - video sorry_53370!
+
+-- gloss: today --
+video: today_58676
+Requesting https://www.youtube.com/watch?v=x6CehcknaH8
+Download part of video: 3286, 3338
+Successful download - video today_58676!
+
+video: today_69512
+Requesting http://aslbricks.org/New/ASL-Videos/today.mp4
+Successful download - video today_69512!
+
+video: today_70346
+Requesting https://www.youtube.com/watch?v=bq-HmgjGzmw
+Download part of video: 4151, 4254
+Successful download - video today_70346!
+
+video: today_58684
+Requesting https://www.signingsavvy.com/signs/mp4/9/9785.mp4
+Successful download - video today_58684!
+
+video: today_58685
+Requesting https://www.youtube.com/watch?v=IlLRJ6jw4lY
+Successful download - video today_58685!
+
+video: today_58686
+Requesting http://www.aslpro.com/main/t/today.swf
+Successful download - video today_58686!
+
+video: today_58687
+Requesting http://www.aslsearch.com/signs/videos/current.mp4
+Successful download - video today_58687!
+
+video: today_58677
+Requesting https://media.spreadthesign.com/video/mp4/13/485657.mp4
+Successful download - video today_58677!
+
+video: today_58678
+Requesting https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/today.mp4
+Successful download - video today_58678!
+
+video: today_58679
+Requesting https://media.asldeafined.com/vocabulary/1468945745.3876.mp4
+Successful download - video today_58679!
+
+video: today_58680
+Requesting https://www.handspeak.com/word/t/today.mp4
+Failed download - HTTP Error 404: Not Found for video today_58680
+
+video: today_58681
+Requesting https://www.signingsavvy.com/signs/mp4/6/6999.mp4
+Successful download - video today_58681!
+
+video: today_58682
+Requesting https://www.signingsavvy.com/signs/mp4/7/7687.mp4
+Successful download - video today_58682!
+
+video: today_58683
+Requesting https://www.signingsavvy.com/signs/mp4/7/7688.mp4
+Successful download - video today_58683!
+
+--- Finished download ---
