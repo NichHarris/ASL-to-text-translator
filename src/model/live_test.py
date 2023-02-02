@@ -5,7 +5,7 @@ import random
 import math
 import os
 
-from asl_model import AslNeuralNetwork, device
+from asl_model import AslNeuralNetwork
 
 def processing_frame(frame, holistic):
     # Initialize pose and left/right hand tensoqs
@@ -149,79 +149,10 @@ def live_video_temporal_fit(frames):
     
     return torch_frames
 
-holistic = get_holistic_model()
+def softmax(output):
+    e = torch.exp(output)
+    return e / e.sum()
 
-'''
-cap = cv2.VideoCapture(0)
-
-frames = []
-buffer_frames = []
- 
-END_SIGN_BUFFER = 3
-SIGN_BUFFER_SIZE = 12
-
-has_sign_started = False
-is_sign_complete = False
-
-# Collect frames until sign is complete
-print('Video capture started...')
-frame_count = 0
-while not is_sign_complete:
-    # Capture frame from camera
-    ret, frame = cap.read()
-
-    cv2.imshow('Frame', frame)
-    cv2.waitKey(1)
-
-    # Add frames to buffer
-    buffer_frames.append(frame)
-    if len(buffer_frames) >= SIGN_BUFFER_SIZE:
-        frame_count += SIGN_BUFFER_SIZE
-        print(f'Fc = {frame_count}')
-        # Process every 12th frame (Once per second)
-        processed_frame = processing_frame(frame, holistic)
-        
-        # Landmarks detected in frame
-        if processed_frame != []:
-            if not has_sign_started:
-                # Set sign start flag
-                has_sign_started = True
-            
-                # Find initial/first frame - delete all previous frames
-                start_frame_ind = bin_search(buffer_frames, 1, holistic)
-                buffer_frames = buffer_frames[start_frame_ind:]
-                print(f'Start Video Check: {len(buffer_frames)}')
-
-            # Add relevant start and middle frames
-            frames.extend(buffer_frames)
-        else:
-            # Sign potentially completed if no landmarks detected anymore
-            if has_sign_started:        
-                # Find last/ending frame - delete all following frames
-                end_frame_ind = bin_search(buffer_frames, 0, holistic)
-                buffer_frames = buffer_frames[:end_frame_ind]    
-                print(f'End Video Check: {len(buffer_frames)}')
-
-                # Mark sign as complete if 3+ frames have no landmarks
-                if SIGN_BUFFER_SIZE - len(buffer_frames) > END_SIGN_BUFFER:
-                    is_sign_complete = True
-                    has_sign_started = False
-
-                # Add relevant end frames
-                frames.extend(buffer_frames)
-        
-        # Remove useless frames, reset buffer
-        buffer_frames = []
-
-print('Video capture ended...')
-print(f'Final Video: {len(frames)}')
-
-# TODO: Add check to see if video is too short or too long
-  
-# Release the camera and close the window
-cap.release()
-cv2.destroyAllWindows()
-'''
 INPUT_SIZE = 226 # 226 datapoints from 67 landmarks - 21 in x,y,z per hand and 25 in x,y,z, visibility for pose
 SEQUENCE_LEN = 48 # 48 frames per video
 NUM_RNN_LAYERS = 3 # 3 LSTM Layers
@@ -230,57 +161,95 @@ LSTM_HIDDEN_SIZE = 128 # 128 nodes in LSTM hidden layers
 FC_HIDDEN_SIZE = 64 # 64 nodes in Fc hidden layers
 OUTPUT_SIZE = 10 # Starting with 5 classes = len(word_dict)
 
-MODEL_PATH = "./model"
+MODEL_PATH = "../../models"
 LOAD_MODEL_VERSION = "v2.0"
-model_state_dict = torch.load(f'{MODEL_PATH}/asl_model_{LOAD_MODEL_VERSION}.pth')
-model = AslNeuralNetwork(INPUT_SIZE, LSTM_HIDDEN_SIZE, FC_HIDDEN_SIZE, OUTPUT_SIZE)
-model.load_state_dict(model_state_dict)
+def load_model():
+    model = AslNeuralNetwork(INPUT_SIZE, LSTM_HIDDEN_SIZE, FC_HIDDEN_SIZE, OUTPUT_SIZE)
+    
+    model_state_dict = torch.load(f'{MODEL_PATH}/asl_model_{LOAD_MODEL_VERSION}.pth')
+    model.load_state_dict(model_state_dict)
 
-# Model 1.0, 1.2, 1.3 (1.1 with dataset3)
-'''
-# Mediapipe keypoint extraction
-mp_frames = []
-for frame in frames:
-    pcf = processing_frame(frame, holistic)
-    if pcf != []:
-        mp_frames.append(pcf)
+    return model
+    
 
-# Fit
-keypoints = live_video_temporal_fit(mp_frames)
+VIDEOS_PATH = '../../preprocess'
+signs = sorted(os.listdir(VIDEOS_PATH))
+def testing_data(sign_word, keypoints): 
+    with torch.no_grad():
+        y_pred = model(keypoints)
+        _, predicted = torch.max(y_pred.data, 1)
 
-VIDEOS_PATH = './data'
-with torch.no_grad():
-    y_pred = model(keypoints)
-    _, predicted = torch.max(y_pred.data, 1) # Apply softmax here to have percentage
+        torch.set_printoptions(precision=5, sci_mode=False)
+        print(sign_word, softmax(y_pred), signs[predicted])  
+    
+    return sign_word == signs[predicted]
 
-    signs = os.listdir(VIDEOS_PATH)
-    print(y_pred, signs[predicted])
-'''
-import torch
-def softmax(output):
- e = torch.exp(output)
- return e / e.sum()
-
-live_data_dir = './live_test' #'./live_ali_test'
-video_names = os.listdir(live_data_dir)
-accuracy = 0
-for vidname in video_names:
-    video = f'{live_data_dir}/{vidname}'
-    sign_word = vidname.split('_')[0]
-
-    # Open sign language video file
-    cap = cv2.VideoCapture(video)
-
-    # Calculate frames per second
-    fps = cap.get(cv2.CAP_PROP_FPS)
+# Live testing with opencv video camera
+def live_single_sign_test():
+    cap = cv2.VideoCapture(0)
 
     frames = []
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    buffer_frames = []
+    
+    END_SIGN_BUFFER = 3
+    SIGN_BUFFER_SIZE = 12
 
-        frames.append(frame)
+    has_sign_started = False
+    is_sign_complete = False
+
+    # Collect frames until sign is complete
+    print('Video capture started...')
+    frame_count = 0
+    sign_word = input('Enter the word for the performed sign: ')
+    while not is_sign_complete:
+        # Capture frame from camera
+        ret, frame = cap.read()
+
+        cv2.imshow('Frame', frame)
+        cv2.waitKey(1)
+
+        # Add frames to buffer
+        buffer_frames.append(frame)
+        if len(buffer_frames) >= SIGN_BUFFER_SIZE:
+            frame_count += SIGN_BUFFER_SIZE
+
+            # Process every 12th frame (Once per second)
+            processed_frame = processing_frame(frame, holistic)
+            
+            # Landmarks detected in frame
+            if processed_frame != []:
+                if not has_sign_started:
+                    # Set sign start flag
+                    has_sign_started = True
+                
+                    # Find initial/first frame - delete all previous frames
+                    start_frame_ind = bin_search(buffer_frames, 1, holistic)
+                    buffer_frames = buffer_frames[start_frame_ind:]
+                    print(f'Started sign video...')
+
+                # Add relevant start and middle frames
+                frames.extend(buffer_frames)
+            else:
+                # Sign potentially completed if no landmarks detected anymore
+                if has_sign_started:        
+                    # Find last/ending frame - delete all following frames
+                    end_frame_ind = bin_search(buffer_frames, 0, holistic)
+                    buffer_frames = buffer_frames[:end_frame_ind]    
+
+                    # Mark sign as complete if 3+ frames have no landmarks
+                    if SIGN_BUFFER_SIZE - len(buffer_frames) > END_SIGN_BUFFER:
+                        is_sign_complete = True
+                        has_sign_started = False
+                        print(f'Ended sign video...')
+
+                    # Add relevant end frames
+                    frames.extend(buffer_frames)
+            
+            # Remove useless frames, reset buffer
+            buffer_frames = []
+
+    # TODO: Add check to see if video is too short (<12) or too long (>96) on len(frames)
+    print(len(frames))
 
     # Release the camera and close the window
     cap.release()
@@ -296,19 +265,69 @@ for vidname in video_names:
     # Fit
     keypoints = live_video_temporal_fit(mp_frames)
 
-    VIDEOS_PATH = './preprocess'
-    with torch.no_grad():
-        y_pred = model(keypoints)
-        _, predicted = torch.max(y_pred.data, 1) # Apply softmax here to have percentage
+    # Pass keypoints to model
+    successful_pred = testing_data(sign_word, keypoints)
+    if successful_pred:
+        print('Succesfully predicted word live!')
+    else:
+        print('Please try again...')
 
-        signs = sorted(os.listdir(VIDEOS_PATH))
-        torch.set_printoptions(precision=5, sci_mode=False)
-        print(sign_word, softmax(y_pred), signs[predicted])
 
-        if sign_word == signs[predicted]:
+# Automated testing from saved sample videos
+def automated_testing():
+    live_data_dir = '../../live_test' #'./live_ali_test'
+    video_names = os.listdir(live_data_dir)
+    accuracy = 0
+    for vidname in video_names:
+        video = f'{live_data_dir}/{vidname}'
+        sign_word = vidname.split('_')[0]
+
+        # Open sign language video file
+        cap = cv2.VideoCapture(video)
+
+        # Calculate frames per second
+        fps = cap.get(cv2.CAP_PROP_FPS)
+
+        frames = []
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            frames.append(frame)
+
+        # Release the camera and close the window
+        cap.release()
+        cv2.destroyAllWindows()
+
+        # Mediapipe keypoint extraction
+        mp_frames = []
+        for frame in frames:
+            pcf = processing_frame(frame, holistic)
+            if pcf != []:
+                mp_frames.append(pcf)
+
+        # Fit
+        keypoints = live_video_temporal_fit(mp_frames)
+
+        # Pass keypoints to model
+        successful_pred = testing_data(sign_word, keypoints)
+        if successful_pred:
             accuracy += 1
-    
-print(signs)
-print(accuracy)
-print(len(video_names))
-print(accuracy/len(video_names))
+        
+    print(signs)
+    print(f'{accuracy}/{len(video_names)} = {accuracy/len(video_names)}')
+
+
+holistic = get_holistic_model()
+
+# Notes:
+# Model 1.0, 1.2, 1.3 (1.1 with dataset3)
+# Model 2.0 provides 87% on my dataset
+model = load_model()
+
+is_automated = False
+if is_automated:
+    automated_testing()
+else:
+    live_single_sign_test()
