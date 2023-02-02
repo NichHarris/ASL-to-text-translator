@@ -1,2 +1,26 @@
+# Mac files
 .DS_STORE
+**/.DS_Store
+
+# Python Virtual Env
 venv/
+env/
+
+# Python Interpreted Code
+__pycache__/*
+**/__pycache__/*
+
+# Data files not ready to be pushed
+history/*
+inputs/raw/*
+runs/*
+ali/*
+dataset_joint/*
+dataset_me/*
+dataset_only/*
+live_ali_test/*
+live_data/*
+live_test/*
+preprocess/*
+preprocess-me/*
+recorded_test/*
