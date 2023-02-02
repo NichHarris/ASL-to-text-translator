@@ -56,33 +56,32 @@ Additional scripts
 
 
 # Code Explanation
-## Retrieving dataset
+## Retrieving WSASL dataset
 
-> Note: If you have access to the raw_videos_mp4.zip file skip this step....
+***TODO: Add source: Added and modified code from https://github.com/dxli94/WLASL ***
 
-***TODO: Add source: https://github.com/dxli94/WLASL ***
+- Install ffmpeg (to convert swf to mp4) and required python dependencies (to download from asl and youtube)
+- Specify the words of interest to download by modififying new_words array
+- Download videos from WLASL.json by running `python3.10 video_downloader.py`
 
-- Follow the direction for installing the required videos from this repository `https://github.com/dxli94/WLASL`
-- A copy of script used for downloading, with some improvements will be added to this repository under `scripts`
-- Recommendation is to use this script, as it organizes the files properly
-
-## Organizing the dataset files
-
-- Place zip/directory under the `files` directory
-- Under scripts directory run the command `python organize_files.py <filename>` (if it is a zip, keep the extension)
-> Note: if the directory is /raw_videos_mp4 you do not need to define a filename when running the command
-
-## Processing the dataset files into numpy arrays
+## Processing dataset files into numpy arrays
 
 - After the files are organized, run the command `python extract_videos.py`
 - This will create the numpy files with the data points from all the dataset videos
 - This will take several hours (improvements to be made to add multithreading to speed up)
 
-## Data augmentation
+## Data augmentation and preprocessing
 - Perform video augmentation on videos in ./data by running `python3.10 video_augmentation.py`
 - Translate video to keypoints per frame on videos in ./data to torch files in ./preprocess by running `python3.10 process_data.py`
 - Perform keypoint matrix augmentation on torch tensor files in ./preprocess by running `python3.10 matrix_augmentation.py`
 - Fit each extracted video keypoint file to 48 frames by randomly upsampling and downsampling video from ./preprocess to ./dataset by running `python3.10 data_temporal_fit.py`
 
+...
 
-TODO: Update download and organize description plus add description for new files
+
+TODO: 
+- Add description for new files
+- Update file to work with new structure
+- Update requirements.txt
+- Add custom testing folder 
+- Add custom videos, train model and test with live script for top 20 words
