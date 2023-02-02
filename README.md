@@ -24,6 +24,38 @@ asl/Scripts/activate
 pip install -r requirements.txt
 ```
 
+# File Structure
+
+inputs - Data
+- custom: Recorded videos following the project requirements to supplement WLASL dataset
+- raw: Original videos downloaded from WLASL dataset using video_downloader.py (to provide a variety of native signers)
+- interim: Extracted landmarks from raw videos with mediapipe using preprocess_videos.py (to reduce neural network complexity and size)
+- augmented: Augmented interim files with matrix transformations using matrix_augmentation.py (to artificially increase dataset size)
+- dataset: Fitted and finalized keypoints using data_temporal_fit.py (to train and test neural network)
+
+models - PyTorch Models
+- asl_model_v{VERSION}.pth
+- asl_optimizer_v{VERSION}.pth
+
+runs - Tensorboard Graphs
+- Training vs Validation Loss Entries
+
+src - Python Code
+- data:
+    - augment: Data augmentation on videos and landmarks
+    - collection: Fast custom data creation on live video
+    - download: Download WLASL dataset for specified words
+    - processing: Process video to keypoints and fit landmarks for model
+- logs - Script outputs
+- model
+    - asl_model.py: PyTorch model architecture
+    - dataset_loader.py: Load input/dataset for training/testing in batches
+    - live_test.py: Test model on live or custom collected videos
+    - train_model.py: Train and save model 
+Additional scripts
+
+
+# Code Explanation
 ## Retrieving dataset
 
 > Note: If you have access to the raw_videos_mp4.zip file skip this step....
@@ -46,8 +78,6 @@ pip install -r requirements.txt
 - This will create the numpy files with the data points from all the dataset videos
 - This will take several hours (improvements to be made to add multithreading to speed up)
 
-# ----- #
-
 ## Data augmentation
 - Perform video augmentation on videos in ./data by running `python3.10 video_augmentation.py`
 - Translate video to keypoints per frame on videos in ./data to torch files in ./preprocess by running `python3.10 process_data.py`
@@ -55,5 +85,4 @@ pip install -r requirements.txt
 - Fit each extracted video keypoint file to 48 frames by randomly upsampling and downsampling video from ./preprocess to ./dataset by running `python3.10 data_temporal_fit.py`
 
 
-TODO: Continue
-
+TODO: Update download and organize description plus add description for new files
