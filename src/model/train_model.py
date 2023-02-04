@@ -45,7 +45,7 @@ import os
 
 from torch.utils.data import DataLoader
 
-from custom_dataset import SignLanguageGestureDataset
+from dataset_loader import SignLanguageGestureDataset
 from asl_model import AslNeuralNetwork
 
 from sklearn.metrics import confusion_matrix
@@ -53,24 +53,24 @@ import seaborn as sns
 
 # Define hyper parameters
 INPUT_SIZE = 226 # 226 datapoints from 67 landmarks - 21 in x,y,z per hand and 25 in x,y,z, visibility for pose
-SEQUENCE_LEN = 36 # 48 frames per video
+SEQUENCE_LEN = 48 # 48 frames per video
 NUM_RNN_LAYERS = 3 # 3 LSTM Layers
 
 # TODO: Hyperparam Optimization: 3-6 layers and 64-256 for lstm + 2-4 layers and 32-128 for fc
 LSTM_HIDDEN_SIZE = 128 # 128 nodes in LSTM hidden layers
 FC_HIDDEN_SIZE = 64 # 64 nodes in Fc hidden layers
-OUTPUT_SIZE = 10 # Starting with 5 classes = len(word_dict) # TODO: Get from word_dict size
+OUTPUT_SIZE = 20 # Starting with 5 classes = len(word_dict) # TODO: Get from word_dict size
 
 # TODO: Determine batch size and num epochs
 # Optimal batch size: 64 (Must be divisible by 8) -> 512
 # Optimal learning rate: Bt 0.0001 and 0.01 (Default: 0.001)
-NUM_EPOCHS = 25
-BATCH_SIZE = 512
+NUM_EPOCHS = 30
+BATCH_SIZE = 256 # DO 512 next
 LEARNING_RATE = 0.001
 
-MODEL_PATH = "./model"
-LOAD_MODEL_VERSION = "v1.7"
-NEW_MODEL_VERSION = "v2.3"
+MODEL_PATH = "../../models"
+LOAD_MODEL_VERSION = "v2.5"
+NEW_MODEL_VERSION = "v2.9"
 
 # Create model
 model = AslNeuralNetwork(INPUT_SIZE, LSTM_HIDDEN_SIZE, FC_HIDDEN_SIZE, OUTPUT_SIZE)
@@ -86,8 +86,8 @@ optimizer = optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 # optimizer.load_state_dict(optimizer_state_dict)
 
 # -- Constants -- #
-VIDEOS_PATH = './preprocess-me'
-DATASET_PATH = './dataset_joint'
+VIDEOS_PATH = '../../inputs/interim'
+DATASET_PATH = '../../inputs/dataset_only'
 DATASET_FILES = os.listdir(DATASET_PATH)
 DATASET_SIZE = len(DATASET_FILES)
 
@@ -98,9 +98,10 @@ ACTUAL_TRAIN_SPLIT = int(TRAIN_SPLIT * 0.8)
 VALID_SPLIT = TRAIN_SPLIT - ACTUAL_TRAIN_SPLIT #(TRAIN_SPLIT * 0.2)
 
 # Define signed words/action classes 
-word_dict = {}
-for i, sign in enumerate(sorted(os.listdir(VIDEOS_PATH))):
-    word_dict[sign] = i
+word_dict = {'bad': 0, 'bye': 1, 'easy': 2, 'good': 3, 'happy': 4, 'hello': 5, 'like': 6, 'me': 7, 'meet': 8, 'more': 9, 'no': 10, 'please': 11, 'sad': 12, 'she': 13, 'sorry': 14, 'thank you': 15, 'want': 16, 'why': 17, 'yes': 18, 'you': 19}
+# for i, sign in enumerate(sorted(os.listdir(VIDEOS_PATH))):
+#     word_dict[sign] = i
+# print(word_dict)
 
 # -- Load dataset -- #
 dataset = SignLanguageGestureDataset(DATASET_PATH, DATASET_FILES, word_dict)
@@ -117,13 +118,14 @@ test_loader = DataLoader(dataset=test_split, batch_size=BATCH_SIZE, shuffle=True
 train_size = len(train_loader)
 valid_size = len(valid_loader)
 
-no_train_loss_items = 10
-no_valid_loss_items = 3
+no_train_loss_items = 30
+no_valid_loss_items = 10
 
 # Create summary writer for Tensorboard
-writer = SummaryWriter()i
+writer = SummaryWriter()
 
 # -- Train Model -- #
+best_train_loss = 1
 for epoch in range(NUM_EPOCHS):
     print(f'--- Starting Epoch #{epoch} ---')
 
@@ -132,8 +134,8 @@ for epoch in range(NUM_EPOCHS):
     train_total_loss = 0
     for i, (keypoints, labels) in enumerate(train_loader):
         # Use GPU for model training computations  
-        keypoints = keypoints.to(AslNeuralNetwork.device)
-        labels = labels.to(AslNeuralNetwork.device)
+        keypoints = keypoints.to(model.device)
+        labels = labels.to(model.device)
 
         # Forward pass
         output = model(keypoints)
@@ -149,14 +151,6 @@ for epoch in range(NUM_EPOCHS):
         mini_batch_loss += loss.item()
         if (i + 1) % no_train_loss_items == 0:
             print(f"Training Loss - {i + 1}/{train_size}: {mini_batch_loss/no_train_loss_items}")
-
-            # writer.add_scalars('Training vs Validation Loss', 
-            #     {
-            #         'train_loss': mini_batch_loss/no_train_loss_items,
-            #     }, 
-            #     [(i + 1) / train_size] * (epoch + 1) 
-            # )
-
             mini_batch_loss = 0
 
     # -- Validation -- #
@@ -164,8 +158,8 @@ for epoch in range(NUM_EPOCHS):
     valid_total_loss = 0
     for i, (keypoints, labels) in enumerate(valid_loader):  
         # Use GPU for model validation computations  
-        keypoints = keypoints.to(AslNeuralNetwork.device)
-        labels = labels.to(AslNeuralNetwork.device)
+        keypoints = keypoints.to(model.device)
+        labels = labels.to(model.device)
 
         # Forward pass
         output = model(keypoints)
@@ -176,25 +170,17 @@ for epoch in range(NUM_EPOCHS):
         mini_batch_loss += loss.item()
         if (i + 1) % no_valid_loss_items == 0:
             print(f'Validation Loss - {i + 1}/{valid_size}: {mini_batch_loss/no_valid_loss_items}')
-
-            # writer.add_scalars('Training vs Validation Loss', 
-            #     {
-            #         'valid_loss': mini_batch_loss/no_valid_loss_items,
-            #     }, 
-            #     [(i + 1) / valid_size] * (epoch + 1) 
-            # )
-
             mini_batch_loss = 0
     
     # TODO: Implement early stopping with best validation loss and patience
     # Save model with early stopping to prevent overfitting
-    # Condition: Epoch validation loss < Epoch training loss
-    if valid_total_loss/valid_size < train_total_loss/train_size:
+    if train_total_loss/train_size < best_train_loss:
+        best_train_loss = train_total_loss/train_size
         torch.save(model.state_dict(), f'{MODEL_PATH}/asl_model_{NEW_MODEL_VERSION}.pth')
-        print(f'Early Stopping: Model Saved - {valid_total_loss/valid_size} \t {train_total_loss/train_size}')
+        print(f'Model Saved - Valid={valid_total_loss/valid_size} \t Train={train_total_loss/train_size}')
     
     # Track training and validation loss in Tensorboard
-    writer.add_scalars('Training vs Validation Loss', 
+    writer.add_scalars(f'Loss Plot - nn_{NEW_MODEL_VERSION}', 
         {
             'train_loss': train_total_loss/train_size,
             'valid_loss': valid_total_loss/valid_size,
@@ -214,8 +200,8 @@ with torch.no_grad():
     test_count = 0
     for keypoints, labels in test_loader:
         # Use GPU for model testing computations  
-        keypoints = keypoints.to(AslNeuralNetwork.device)
-        labels = labels.to(AslNeuralNetwork.device)
+        keypoints = keypoints.to(model.device)
+        labels = labels.to(model.device)
         
         # Pass testing instances
         output = model(keypoints)
@@ -257,6 +243,23 @@ on 10 words
     -> Model's performance didn't improve
 - 1.9 / 2.3 : Own videos with matrix aug 48 frames
 - 2.0 / 2.4 : Own videos plus WL-ASL dataset with matrix augmentation 48 frames
-...
-TODO: 2.1, 2.2, 2.3
+    -> 88% accuracy on Nick live test videos
+- 2.1 : Only WLASL videos
+    -> Model couldn't converge, not enough data
+- 2.2 : 
+- 2.3 : 
+TODO: Describe 2.2, 2.3
+
+on 20 words
+- 2.4 / 3.0 : Only Own plus WLASL for 250 epochs
+    -> Model underfits, needs more data
+- 2.5 / 3.1 : 
+    -> 81% v2.5_14 (14th epoch)
+- 2.6 / 3.2: Only Own plus WLASL for 350 epochs 
+    -> Doesn't converge
+- 2.7 / 3.3: Own plus WLASL with 5 diff temporal fits
+    -> Converges near 123, 130
+- 2.8 / 3.4 : WLASL only with 5 diff temporal fits
+
+- 2.9 / 3.5 : WLASL only with 5 diff temporal fits + single matrix aug with 3 diff temporal fits
 '''

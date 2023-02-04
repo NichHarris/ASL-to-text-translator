@@ -107,9 +107,6 @@ def live_video_temporal_fit(frames):
     # Calculate num frames over or under data frames input limit 
     num_frames = len(frames)
     missing_frames = NUM_SEQUENCES - num_frames
-
-    if missing_frames == 0:
-        print("Data already fitted to 48 frames")
         
     is_over_limit = missing_frames < 0
     # print(f'Problem: {num_frames}')
@@ -159,10 +156,12 @@ NUM_RNN_LAYERS = 3 # 3 LSTM Layers
 
 LSTM_HIDDEN_SIZE = 128 # 128 nodes in LSTM hidden layers
 FC_HIDDEN_SIZE = 64 # 64 nodes in Fc hidden layers
-OUTPUT_SIZE = 10 # Starting with 5 classes = len(word_dict)
+OUTPUT_SIZE = 20 # Starting with 5 classes = len(word_dict)
 
 MODEL_PATH = "../../models"
-LOAD_MODEL_VERSION = "v2.0"
+LOAD_MODEL_VERSION = "v2.9_20"
+# v2.5_14 works great (82% and 31%)
+# v2.9_15 works even better (88% and 50%)
 def load_model():
     model = AslNeuralNetwork(INPUT_SIZE, LSTM_HIDDEN_SIZE, FC_HIDDEN_SIZE, OUTPUT_SIZE)
     
@@ -172,8 +171,9 @@ def load_model():
     return model
     
 
-VIDEOS_PATH = '../../preprocess'
-signs = sorted(os.listdir(VIDEOS_PATH))
+VIDEOS_PATH = '../../inputs/interim'
+# signs = sorted(os.listdir(VIDEOS_PATH))
+signs = ['bad', 'bye', 'easy', 'good', 'happy', 'hello', 'like', 'me', 'meet', 'more', 'no', 'please', 'sad', 'she', 'sorry', 'thank you', 'want', 'why', 'yes', 'you']
 def testing_data(sign_word, keypoints): 
     with torch.no_grad():
         y_pred = model(keypoints)
@@ -275,7 +275,7 @@ def live_single_sign_test():
 
 # Automated testing from saved sample videos
 def automated_testing():
-    live_data_dir = '../../live_test' #'./live_ali_test'
+    live_data_dir = '../../test_nick' #'../../test_ali' #
     video_names = os.listdir(live_data_dir)
     accuracy = 0
     for vidname in video_names:
@@ -310,6 +310,8 @@ def automated_testing():
         # Fit
         keypoints = live_video_temporal_fit(mp_frames)
 
+        torch.save(keypoints, f'../../processed_tests/nick/{vidname.split(".mp4")[0]}.pt')
+
         # Pass keypoints to model
         successful_pred = testing_data(sign_word, keypoints)
         if successful_pred:
@@ -317,6 +319,25 @@ def automated_testing():
         
     print(signs)
     print(f'{accuracy}/{len(video_names)} = {accuracy/len(video_names)}')
+    print(f'using model {LOAD_MODEL_VERSION}')
+
+def fast_automated_testing():
+    accuracy = 0
+    processed_testing_path = f'../../processed_tests/ali'
+
+    videos = os.listdir(processed_testing_path)
+    for video in videos:
+        sign_word = video.split('_')[0]
+        keypoints = torch.load(f'{processed_testing_path}/{video}')
+
+        # Pass keypoints to model
+        successful_pred = testing_data(sign_word, keypoints)
+        if successful_pred:
+            accuracy += 1
+    
+    print(signs)
+    print(f'{accuracy}/{len(videos)} = {accuracy/len(videos)}')
+    print(f'using model {LOAD_MODEL_VERSION}')
 
 
 holistic = get_holistic_model()
@@ -324,10 +345,16 @@ holistic = get_holistic_model()
 # Notes:
 # Model 1.0, 1.2, 1.3 (1.1 with dataset3)
 # Model 2.0 provides 87% on my dataset
+# Model 2.5 
+# Model 2.9 v20 85% and 51%
 model = load_model()
 
-is_automated = False
+is_automated = True
+is_fast_comparison = True
 if is_automated:
-    automated_testing()
+    if is_fast_comparison:
+        fast_automated_testing()
+    else:
+        automated_testing()
 else:
     live_single_sign_test()
