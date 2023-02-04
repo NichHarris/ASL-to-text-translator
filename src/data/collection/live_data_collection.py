@@ -5,8 +5,6 @@ import random
 import math
 import os
 
-from asl_model import AslNeuralNetwork, device
-
 def processing_frame(frame, holistic):
     # Initialize pose and left/right hand tensoqs
     left_hand, right_hand, pose = torch.zeros(21 * 3), torch.zeros(21 * 3), torch.zeros(25 * 4)
@@ -153,11 +151,17 @@ def live_video_temporal_fit(frames):
 cap = cv2.VideoCapture(0)
 holistic = get_holistic_model()
 
+LIVE_DATA_PATH='../../../data_nick'
+
+signer_name = input('Enter the name of the signer:') #nick, ali, matt, tarun, abdul, harris
 sign_word = input('Enter sign word (str): ')
+if not os.path.exists(f'{LIVE_DATA_PATH}/{sign_word}'):
+    os.makedirs(f'{LIVE_DATA_PATH}/{sign_word}')
+
 iteration= 1
 # TODO: Get iteration of last word from folder (hello_7 -> start at 8)
 
-while(iteration <= 30):
+while(iteration <= 25):
     frames = []
     buffer_frames = []
     
@@ -174,6 +178,8 @@ while(iteration <= 30):
         # Capture frame from camera
         ret, frame = cap.read()
 
+        # Display current video number
+        cv2.putText(img=frame, text=f'{iteration}', org=(100, 100), fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=2, color=(255, 255, 0), thickness=2)
         cv2.imshow('Frame', frame)
         cv2.waitKey(1)
 
@@ -238,11 +244,12 @@ while(iteration <= 30):
     video_writer = cv2.VideoWriter_fourcc(*fourcc)
 
     # Save video 
-    out = cv2.VideoWriter(f"../../../live_data/{sign_word}_{iteration}.mp4", video_writer, fps, (width, height))
+    file_path = f"{LIVE_DATA_PATH}/{sign_word}/{sign_word}_{iteration}_{signer_name}.mp4"
+    out = cv2.VideoWriter(file_path, video_writer, fps, (width, height))
     for frame in frames:
         out.write(frame)
     out.release()
-    print(f'../../../live_data/{sign_word}_{iteration}.mp4')
+    print(file_path)
     iteration += 1
 
 
