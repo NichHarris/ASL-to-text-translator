@@ -40,8 +40,9 @@ import mediapipe as mp
 from matplotlib import pyplot as plt
 from os import listdir, makedirs, path  
 
-DATA_PATH = "../../../live_data"
-PREPROCESS_PATH = "../../../preprocess-me"
+DATA_PATH = "../../../inputs/raw"
+# "../../../data_nick"
+PREPROCESS_PATH = "../../../inputs/interim"
 
 # Total landmarks: 21*3 * 2 (L/R Hands) + 25 * 4 (Pose)
 NUM_LANDMARKS = 226 
@@ -141,6 +142,10 @@ def main():
         preprocess_folder = f"{PREPROCESS_PATH}/{action}"
         if not path.exists(preprocess_folder):
             makedirs(preprocess_folder)
+        # Optional: Skip directory if already exists
+        # else: 
+        #     print(f'Skipping {action}')
+        #     continue
 
         # Get all filenames for preprocessing each
         action_folder = f"{DATA_PATH}/{action}"
@@ -149,6 +154,10 @@ def main():
         # Preprocess video by video
         for video in videos:
             vid_name = video.split(".")[0]
+            # Skip already processed videos
+            if path.exists(f'{preprocess_folder}/{vid_name}.pt'):
+                continue
+
             print(f"\n-- Preprocessing video {vid_name} --")
 
             # Open sign language video file capture
