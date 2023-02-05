@@ -32,17 +32,13 @@ https://www.baeldung.com/cs/training-validation-loss-deep-learning
     -> Both decrease and stabilize
 '''
 
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision 
-import torchvision.transforms as transforms
 
-import numpy as np
-import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
-import os
-
 from torch.utils.data import DataLoader
 
 from dataset_loader import SignLanguageGestureDataset
@@ -64,13 +60,13 @@ OUTPUT_SIZE = 20 # Starting with 5 classes = len(word_dict) # TODO: Get from wor
 # TODO: Determine batch size and num epochs
 # Optimal batch size: 64 (Must be divisible by 8) -> 512
 # Optimal learning rate: Bt 0.0001 and 0.01 (Default: 0.001)
-NUM_EPOCHS = 30
-BATCH_SIZE = 256 # DO 512 next
+NUM_EPOCHS = 200 #30
+BATCH_SIZE = 64 #256
 LEARNING_RATE = 0.001
 
 MODEL_PATH = "../../models"
 LOAD_MODEL_VERSION = "v2.5"
-NEW_MODEL_VERSION = "v2.9"
+NEW_MODEL_VERSION = "v3.4"
 
 # Create model
 model = AslNeuralNetwork(INPUT_SIZE, LSTM_HIDDEN_SIZE, FC_HIDDEN_SIZE, OUTPUT_SIZE)
@@ -87,7 +83,7 @@ optimizer = optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
 # -- Constants -- #
 VIDEOS_PATH = '../../inputs/interim'
-DATASET_PATH = '../../inputs/dataset_only'
+DATASET_PATH = '../../inputs/dataset_wlasl'
 DATASET_FILES = os.listdir(DATASET_PATH)
 DATASET_SIZE = len(DATASET_FILES)
 
@@ -118,14 +114,17 @@ test_loader = DataLoader(dataset=test_split, batch_size=BATCH_SIZE, shuffle=True
 train_size = len(train_loader)
 valid_size = len(valid_loader)
 
-no_train_loss_items = 30
-no_valid_loss_items = 10
+no_train_loss_items = int(train_size/3) #30
+no_valid_loss_items = int(valid_size/2) #10
 
 # Create summary writer for Tensorboard
 writer = SummaryWriter()
 
 # -- Train Model -- #
-best_train_loss = 1
+patience=5
+has_patience_started=False
+
+best_epoch_loss = 1
 for epoch in range(NUM_EPOCHS):
     print(f'--- Starting Epoch #{epoch} ---')
 
@@ -172,16 +171,28 @@ for epoch in range(NUM_EPOCHS):
             print(f'Validation Loss - {i + 1}/{valid_size}: {mini_batch_loss/no_valid_loss_items}')
             mini_batch_loss = 0
     
-    # TODO: Implement early stopping with best validation loss and patience
     # Save model with early stopping to prevent overfitting
-    if train_total_loss/train_size < best_train_loss:
-        best_train_loss = train_total_loss/train_size
+    # Condition: Better validation loss in under patience epochs
+    train_epoch_loss = train_total_loss/train_size
+    valid_epoch_loss = valid_total_loss/valid_size
+    if valid_epoch_loss < best_epoch_loss:
+        best_epoch_loss = valid_epoch_loss
+        
+        has_patience_started = True
+        patience = 5
+        
         torch.save(model.state_dict(), f'{MODEL_PATH}/asl_model_{NEW_MODEL_VERSION}.pth')
-        print(f'Model Saved - Valid={valid_total_loss/valid_size} \t Train={train_total_loss/train_size}')
-    
+        print(f'Model Saved - Train={train_epoch_loss}  Valid={valid_epoch_loss}')
+    else:
+        if has_patience_started:
+            patience -= 1
+
+            if patience == 0:
+                break
+
     # Track training and validation loss in Tensorboard
     writer.add_scalars(f'Loss Plot - nn_{NEW_MODEL_VERSION}', 
-        {
+        { 
             'train_loss': train_total_loss/train_size,
             'valid_loss': valid_total_loss/valid_size,
         }, 
@@ -221,8 +232,8 @@ with torch.no_grad():
     # sns.heatmap(cm, annot=True)
 
 # -- Save Model -- #
-torch.save(model.state_dict(), f'{MODEL_PATH}/asl_model_{NEW_MODEL_VERSION}.pth') 
-torch.save(optimizer.state_dict(), f'{MODEL_PATH}/asl_optimizer_{NEW_MODEL_VERSION}.pth')
+torch.save(model.state_dict(), f'{MODEL_PATH}/asl_model_{NEW_MODEL_VERSION}_end.pth') 
+torch.save(optimizer.state_dict(), f'{MODEL_PATH}/asl_optimizer_{NEW_MODEL_VERSION}_end.pth')
 
 
 '''
@@ -262,4 +273,13 @@ on 20 words
 - 2.8 / 3.4 : WLASL only with 5 diff temporal fits
 
 - 2.9 / 3.5 : WLASL only with 5 diff temporal fits + single matrix aug with 3 diff temporal fits
+    -> 88% v2.9_15
+- 3.0 / 3.6 : Bidirectional
+    -> 91% v3.0_15
+- 3.1 / 3.7 : Bidirectional 4 layers
+
+- 3.2 / 3.7 : Bidirectional 4 layers w/ no aug
+    -> 39% on Ali dataset
+- 3.3 / 3.8 : 
+
 '''
