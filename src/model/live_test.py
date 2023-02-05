@@ -159,9 +159,14 @@ FC_HIDDEN_SIZE = 64 # 64 nodes in Fc hidden layers
 OUTPUT_SIZE = 20 # Starting with 5 classes = len(word_dict)
 
 MODEL_PATH = "../../models"
-LOAD_MODEL_VERSION = "v2.9_20"
+LOAD_MODEL_VERSION = "v3.0_15"
 # v2.5_14 works great (82% and 31%)
 # v2.9_15 works even better (88% and 50%)
+# v3.0_11 (91% and 46%)
+# v3.0_15 (91% and 51%)
+# v3.1_18 (86% and 51%)
+# v3.3_end very bad (26%, 33%)
+
 def load_model():
     model = AslNeuralNetwork(INPUT_SIZE, LSTM_HIDDEN_SIZE, FC_HIDDEN_SIZE, OUTPUT_SIZE)
     
@@ -275,7 +280,8 @@ def live_single_sign_test():
 
 # Automated testing from saved sample videos
 def automated_testing():
-    live_data_dir = '../../test_nick' #'../../test_ali' #
+    test_user='nick' #'ali'#
+    live_data_dir = f'../../test_{test_user}'
     video_names = os.listdir(live_data_dir)
     accuracy = 0
     for vidname in video_names:
@@ -310,7 +316,7 @@ def automated_testing():
         # Fit
         keypoints = live_video_temporal_fit(mp_frames)
 
-        torch.save(keypoints, f'../../processed_tests/nick/{vidname.split(".mp4")[0]}.pt')
+        torch.save(keypoints[0], f'../../processed_tests/{test_user}/{vidname.split(".mp4")[0]}.pt')
 
         # Pass keypoints to model
         successful_pred = testing_data(sign_word, keypoints)
@@ -323,10 +329,10 @@ def automated_testing():
 
 def fast_automated_testing():
     accuracy = 0
-    processed_testing_path = f'../../processed_tests/ali'
+    processed_testing_path = f'../../processed_tests/ali' #f'../../processed_tests/nick' #
 
     videos = os.listdir(processed_testing_path)
-    for video in videos:
+    for video in videos: 
         sign_word = video.split('_')[0]
         keypoints = torch.load(f'{processed_testing_path}/{video}')
 
@@ -350,7 +356,7 @@ holistic = get_holistic_model()
 model = load_model()
 
 is_automated = True
-is_fast_comparison = True
+is_fast_comparison = False
 if is_automated:
     if is_fast_comparison:
         fast_automated_testing()
