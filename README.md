@@ -24,64 +24,28 @@ asl/Scripts/activate
 pip install -r requirements.txt
 ```
 
-# File Structure
+## Retrieving dataset
 
-inputs - Data
-- custom: Recorded videos following the project requirements to supplement WLASL dataset
-- raw: Original videos downloaded from WLASL dataset using video_downloader.py (to provide a variety of native signers)
-- interim: Extracted landmarks from raw videos with mediapipe using preprocess_videos.py (to reduce neural network complexity and size)
-- augmented: Augmented interim files with matrix transformations using matrix_augmentation.py (to artificially increase dataset size)
-- dataset: Fitted and finalized keypoints using data_temporal_fit.py (to train and test neural network)
+> Note: If you have access to the raw_videos_mp4.zip file skip this step....
 
-models - PyTorch Models
-- asl_model_v{VERSION}.pth
-- asl_optimizer_v{VERSION}.pth
+***TODO: Add source: https://github.com/dxli94/WLASL ***
 
-runs - Tensorboard Graphs
-- Training vs Validation Loss Entries
+- Follow the direction for installing the required videos from this repository `https://github.com/dxli94/WLASL`
+- A copy of script used for downloading, with some improvements will be added to this repository under `scripts`
+- Recommendation is to use this script, as it organizes the files properly
 
-src - Python Code
-- data:
-    - augment: Data augmentation on videos and landmarks
-    - collection: Fast custom data creation on live video
-    - download: Download WLASL dataset for specified words
-    - processing: Process video to keypoints and fit landmarks for model
-- logs - Script outputs
-- model
-    - asl_model.py: PyTorch model architecture
-    - dataset_loader.py: Load input/dataset for training/testing in batches
-    - live_test.py: Test model on live or custom collected videos
-    - train_model.py: Train and save model 
-Additional scripts
+## Organizing the dataset files
 
+- Place zip/directory under the `files` directory
+- Under scripts directory run the command `python organize_files.py <filename>` (if it is a zip, keep the extension)
+> Note: if the directory is /raw_videos_mp4 you do not need to define a filename when running the command
 
-# Code Explanation
-## Retrieving WSASL dataset
-
-***TODO: Add source: Added and modified code from https://github.com/dxli94/WLASL ***
-
-- Install ffmpeg (to convert swf to mp4) and required python dependencies (to download from asl and youtube)
-- Specify the words of interest to download by modififying new_words array
-- Download videos from WLASL.json by running `python3.10 video_downloader.py`
-
-## Processing dataset files into numpy arrays
+## Processing the dataset files into numpy arrays
 
 - After the files are organized, run the command `python extract_videos.py`
 - This will create the numpy files with the data points from all the dataset videos
 - This will take several hours (improvements to be made to add multithreading to speed up)
 
-## Data augmentation and preprocessing
-- Perform video augmentation on videos in ./data by running `python3.10 video_augmentation.py`
-- Translate video to keypoints per frame on videos in ./data to torch files in ./preprocess by running `python3.10 process_data.py`
-- Perform keypoint matrix augmentation on torch tensor files in ./preprocess by running `python3.10 matrix_augmentation.py`
-- Fit each extracted video keypoint file to 48 frames by randomly upsampling and downsampling video from ./preprocess to ./dataset by running `python3.10 data_temporal_fit.py`
-
-...
+TODO: Continue
 
 
-TODO: 
-- Add description for new files
-- Update file to work with new structure
-- Update requirements.txt
-- Add custom testing folder 
-- Add custom videos, train model and test with live script for top 20 words
