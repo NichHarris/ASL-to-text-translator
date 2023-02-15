@@ -45,13 +45,7 @@ from torch.utils.tensorboard import SummaryWriter
 import optuna
 from optuna.samplers import TPESampler
 # pip3.10 install optuna optuna-dashboard
-
 # pip3.10 install mysql-connector-python
-
-# Define hyper parameters
-INPUT_SIZE = 201 # 226 datapoints from 67 landmarks - 21 in x,y,z per hand and 25 in x,y,z, visibility for pose
-OUTPUT_SIZE = 20 # Starting with 5 classes = len(word_dict) # TODO: Get from word_dict size
-
 
 # TODO: Determine batch size and num epochs
 # Optimal batch size: 64 (Must be divisible by 8) -> 512
@@ -152,14 +146,13 @@ def train_model(trial, params):
         if valid_epoch_loss < best_epoch_loss:
             best_epoch_loss = valid_epoch_loss
 
-            patience = 0
-            has_patience_started = True
+            patience_counter = 0
             torch.save(model.state_dict(), f'{MODEL_PATH}/{trial.number}/asl_model_{trial.number}_vl={valid_epoch_loss}.pth')
             print(f'Model Saved - Train={train_epoch_loss}  Valid={valid_epoch_loss}')
         else:
-            patience += 1
+            patience_counter += 1
 
-            if patience_counter >= patience:
+            if patience_counter > patience:
                 print(f'Early Stopping - Train={train_epoch_loss}  Valid={valid_epoch_loss}')
                 return best_epoch_loss
         
