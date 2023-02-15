@@ -33,7 +33,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision 
-import torchvision.transforms as transforms
 
 import os
 
@@ -44,30 +43,30 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import optuna
+from optuna.samplers import TPESampler
 # pip3.10 install optuna optuna-dashboard
 
 # pip3.10 install mysql-connector-python
 
 # Define hyper parameters
-INPUT_SIZE = 226 # 226 datapoints from 67 landmarks - 21 in x,y,z per hand and 25 in x,y,z, visibility for pose
-SEQUENCE_LEN = 48 # 48 frames per video
+INPUT_SIZE = 201 # 226 datapoints from 67 landmarks - 21 in x,y,z per hand and 25 in x,y,z, visibility for pose
 OUTPUT_SIZE = 20 # Starting with 5 classes = len(word_dict) # TODO: Get from word_dict size
 
 
 # TODO: Determine batch size and num epochs
 # Optimal batch size: 64 (Must be divisible by 8) -> 512
-NUM_EPOCHS = 30
-BATCH_SIZE = 128 #1024
+NUM_EPOCHS = 60
+BATCH_SIZE = 64
+VALID_BATCH_SIZE = 8
 
 MODEL_PATH = "../../smbo"
 
 # -- Constants -- #
-DATASET_PATH = '../../inputs/dataset_no_aug'
-# '../../inputs/dataset_only'
+DATASET_PATH = '../../inputs/dataset_no_aug_no_vis'
 DATASET_FILES = os.listdir(DATASET_PATH)
 DATASET_SIZE = len(DATASET_FILES)
 
-VALID_SET_PATH= '../../processed_tests/ali'
+VALID_SET_PATH= '../../processed_tests/joint_no_vis'
 VALID_SET_FILES = os.listdir(VALID_SET_PATH)
 VALID_SET_SIZE = len(VALID_SET_FILES)
 print(DATASET_SIZE, VALID_SET_SIZE)
@@ -80,25 +79,26 @@ train_set = SignLanguageGestureDataset(DATASET_PATH, DATASET_FILES, word_dict)
 train_loader = DataLoader(dataset=train_set, batch_size=BATCH_SIZE, shuffle=True)
 
 valid_set = SignLanguageGestureDataset(VALID_SET_PATH, VALID_SET_FILES, word_dict)
-valid_loader = DataLoader(dataset=valid_set, batch_size=32, shuffle=True)
+valid_loader = DataLoader(dataset=valid_set, batch_size=VALID_BATCH_SIZE, shuffle=True)
 
 train_size = len(train_loader)
 valid_size = len(valid_loader)
 
-no_train_loss_items = int(train_size/3)
-no_valid_loss_items = int(valid_size/3)
+no_train_loss_items = int(train_size/5)
+no_valid_loss_items = int(valid_size/5)
 
 # -- Train Model -- #
 def train_model(trial, params):
     # Create model
-    model = AslNeuralNetwork(INPUT_SIZE, params['lstm_hidden_size'], params['fc_hidden_size'], OUTPUT_SIZE, params['num_lstm_layers'])
-    print(params['lstm_hidden_size'], params['fc_hidden_size'], params['num_lstm_layers'], params['learning_rate'])
+    model = AslNeuralNetwork(lstm_hidden_size=params['lstm_hidden_size'], num_lstm_layers=params['num_lstm_layers'], dropout_rate=params['dropout'])
+    print(f"{params['num_lstm_layers']} x {params['lstm_hidden_size']} biLSTM w/ lr {params['learning_rate']} + dr {params['dropout']}")
 
     # Define loss and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(params=model.parameters(), lr=params['learning_rate'])
 
-    patience=3
+    patience = 5
+    patience_counter = 0
     best_epoch_loss = 100
     for epoch in range(NUM_EPOCHS):
         print(f'--- Starting Epoch #{epoch} ---')
@@ -152,15 +152,14 @@ def train_model(trial, params):
         if valid_epoch_loss < best_epoch_loss:
             best_epoch_loss = valid_epoch_loss
 
-            patience = 3
+            patience = 0
             has_patience_started = True
-            if valid_epoch_loss < 0.2:
-                torch.save(model.state_dict(), f'{MODEL_PATH}/asl_model_{trial.number}_vl={valid_epoch_loss}.pth')
+            torch.save(model.state_dict(), f'{MODEL_PATH}/{trial.number}/asl_model_{trial.number}_vl={valid_epoch_loss}.pth')
             print(f'Model Saved - Train={train_epoch_loss}  Valid={valid_epoch_loss}')
         else:
-            patience -= 1
+            patience += 1
 
-            if patience == 0:
+            if patience_counter >= patience:
                 print(f'Early Stopping - Train={train_epoch_loss}  Valid={valid_epoch_loss}')
                 return best_epoch_loss
         
@@ -177,31 +176,39 @@ def train_model(trial, params):
 def objective(trial):
     params = {
         'num_lstm_layers': trial.suggest_int('num_lstm_layers', 3, 6), # 8
-        'lstm_hidden_size': trial.suggest_int('lstm_hidden_size', 64, 256), #512
-        'fc_hidden_size': trial.suggest_int('fc_hidden_size', 32, 128), # 256
+        'lstm_hidden_size': trial.suggest_int('lstm_hidden_size', 128, 256), #512
         'learning_rate':  trial.suggest_float('learning_rate', 1e-4, 1e-1),
+        'batch_size': trial.suggest_int('batch_size', 64, 1024),
+        'dropout': trial.suggest_float('dropout', 0.2, 0.5) 
     }
-    # 'dropout': trial.suggest_uniform('dropout', 0.1, 0.8)  
+    # TODO: Consider num fc nodes later
+    # 'fc_hidden_size': trial.suggest_int('fc_hidden_size', 64, 128), # 256
+
+    if not os.path.exists(f'{MODEL_PATH}/{trial.number}'):
+        os.makedirs(f'{MODEL_PATH}/{trial.number}')
     
     # Train with params
     best_loss = train_model(trial, params)
 
     return best_loss
     
-# Create study minimizing loss
+# Create study minimizing validation loss or maximize accuracy
 # TODO: Look into how to setup mysql
 study = optuna.create_study(
     direction='minimize',
     study_name='top_20_words',
+    sampler=TPESampler()
     # storage="mysql://root@127.0.0.1/optunadb", 
     # load_if_exists= True,
     # sampler= ..., pruner=...
 )
-study.optimize(objective, n_trials=20)
+study.optimize(objective, n_trials=100)
 
 trialx = study.best_trial
 print(trialx.values)
 print(trialx.params)
+
+# TODO: Integrate Raytune with Optuna 
 
 
 # brew install mysql
