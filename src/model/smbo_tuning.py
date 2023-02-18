@@ -44,6 +44,10 @@ from torch.utils.tensorboard import SummaryWriter
 
 import optuna
 from optuna.samplers import TPESampler
+
+from ray import tune
+from ray.tune.suggest.optuna import OptunaSearch
+
 # pip3.10 install optuna optuna-dashboard
 # pip3.10 install mysql-connector-python
 
@@ -187,22 +191,39 @@ def objective(trial):
     
 # Create study minimizing validation loss or maximize accuracy
 # TODO: Look into how to setup mysql
-study = optuna.create_study(
-    direction='minimize',
-    study_name='top_20_words',
-    sampler=TPESampler()
-    # storage="mysql://root@127.0.0.1/optunadb", 
-    # load_if_exists= True,
-    # sampler= ..., pruner=...
-)
-study.optimize(objective, n_trials=100)
+# study = optuna.create_study(
+#     direction='minimize',
+#     study_name='top_20_words',
+#     sampler=TPESampler()
+#     # storage="mysql://root@127.0.0.1/optunadb", 
+#     # load_if_exists= True,
+#     # sampler= ..., pruner=...
+# )
+# study.optimize(objective, n_trials=100)
 
-trialx = study.best_trial
-print(trialx.values)
-print(trialx.params)
+# trialx = study.best_trial
+# print(trialx.values)
+# print(trialx.params)
 
 # TODO: Integrate Raytune with Optuna 
+search_space = {"lr": tune.loguniform(1e-4, 1e-2), "momentum": tune.uniform(0.1, 0.9)}
+algo = OptunaSearch()
 
+# 3. Start a Tune run that maximizes mean accuracy and stops after 5 iterations.
+tuner = tune.Tuner(
+    objective,
+    tune_config=tune.TuneConfig(
+        metric="mean_accuracy",
+        mode="max",
+        search_alg=algo,
+    ),
+    run_config=air.RunConfig(
+        stop={"training_iteration": 200}, # increase to 500 later on
+    ),
+    param_space=search_space,
+)
+results = tuner.fit()
+print("Best config is:", results.get_best_result().config)
 
 # brew install mysql
 # mysql -u root
