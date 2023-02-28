@@ -33,7 +33,6 @@ mediapipe==0.9.0.1
 msgpack==1.0.4
 multidict==6.0.4
 networkx==2.8.8
-numpy==1.24.0
 nvidia-ml-py==11.495.46
 opencv-contrib-python==4.6.0.66
 opencv-python==4.6.0.66
