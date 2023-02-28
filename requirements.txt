@@ -53,7 +53,7 @@ ray==2.3.0
 requests==2.28.1
 scikit-image==0.19.3
 scipy==1.9.3
-seaborn=0.12.2
+seaborn==0.12.2
 six==1.16.0
 sqlalchemy==2.0.4
 tifffile==2022.10.10
