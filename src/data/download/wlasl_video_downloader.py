@@ -115,9 +115,9 @@ def download_videos(indexfile, saveto):
     content = json.load(json_file)
     
     sign_words = ['hello', 'bye', 'me/I', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'he/she/they', 'bad', 'happy', 'sad', 'sorry', 'like', 'want', 'easy', 'meet', 'more', 'why']
-    new_sign_words = ['again', 'learn', 'sign', 'hard']
-    # ['a', 'b', 'c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-   
+    new_sign_words = ['a', 'b', 'c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+    # ['again', 'learn', 'sign', 'hard']
+
     # Next 5 words: again/repeat, less, learn, sign, done/finish
     # Note: c, l, x, y, z missing in words
 
@@ -168,27 +168,3 @@ if __name__ == '__main__':
 
     end_time = time.time()
     print("\nTotal Raw Video Download Time (s): ", end_time - start_time)
-
-
-
-def remove_bad_videos():
-    sign_words = ['hello', 'bye', 'me', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'she', 'bad', 'happy', 'sad', 'sorry', 'like', 'want', 'easy', 'meet', 'more', 'today', 'why']
-
-    json_file = open(DATASET_VIDEOS_INDEX_FILE)
-    content = json.load(json_file)
-    
-    for entry in content:
-        gloss = entry['gloss']
-        if gloss in sign_words:
-            instances = entry['instances']
-            for inst in instances:
-                if inst['frame_start'] > 2 or inst['frame_end'] != -1:
-                    vid_name = (gloss + "_" + inst['video_id'] + '.mp4')
-                    if os.path.exists(f'{SAVE_VIDEOS_FOLDER}/{gloss}/{vid_name}'):
-                        print(f'Removing raw {vid_name}')
-                        os.remove(f'{SAVE_VIDEOS_FOLDER}/{gloss}/{vid_name}')
-
-                    vid_name_pt = (gloss + "_" + inst['video_id'] + '.pt')
-                    if os.path.exists(f'../../../inputs/interim/{gloss}/{vid_name_pt}'):
-                        print(f'Removing interim {vid_name_pt}')
-                        os.remove(f'../../../inputs/interim/{gloss}/{vid_name_pt}')
