@@ -50,12 +50,6 @@ def get_all_words():
                 # Add space between unrelated entries
                 f.write('\n')
 
-'''
-res = requests.get(home_url, headers=headers) 
-
-# Check if home page contains words
-soup = BeautifulSoup(res.content, "html.parser")
-option_words = soup.findAll('option')
 
 recognized_sign_words = [
     'bad', 
@@ -80,38 +74,29 @@ recognized_sign_words = [
     'ix-2p' #you
 ]
 
-# what, #what, "what"
-
-sign_endpoints = {}
-
-for option_word in option_words:
-    js_code = option_word.get('ondblclick')
-    if js_code:
-        sign_word, *_ = option_word.text.strip().split(" ")
-        sign_word = sign_word.lower()
-        
-        # Ignore hashtag if present
-        if sign_word[0] == '#':
-            sign_word = sign_word[1:]
-
-        if sign_word in recognized_sign_words:
-            # Deal with same word appearing multiple times for slang
-            word_endpoint = extract_endpoint_from_js(js_code)
-            eps = sign_endpoints.get(sign_word)
-            if eps:
-                sign_endpoints[sign_word] = [word_endpoint, *sign_endpoints[sign_word]]
-            else:
-                sign_endpoints[sign_word] = [word_endpoint]
-print(sign_endpoints)
-'''
-
 def get_endpoints():
-    # Write get endpoints function
+    sign_endpoints = {}
     with open('asllrp_words_links.txt', 'r') as f:
         for line in f.readlines():
+            # Remove new line and ignore empty lines
+            line = line.strip()
+            if not line:
+                continue 
+
+            # TODO: Modify how to obtain word
             word, endpoint = line.split("\t")
-            if len(word) <= 3:
-                print(f'{word} {endpoint[:-1]}')
+            # if word in recognized_sign_words:
+            if len(word) <= 1:
+                # print(f'{word} {endpoint}')
+                
+                # Deal with same word appearing multiple times for slang
+                if sign_endpoints.get(word):
+                    sign_endpoints[word] = [endpoint, *sign_endpoints[word]]
+                else:
+                    sign_endpoints[word] = [endpoint]
+            
+    print(sign_endpoints)
+
 
 # sign_endpoints = {'bad': ['occurrence?id_SignBankVariant=506'], 'easy': ['occurrence?id_SignBankVariant=1065'], 'good': ['occurrence?id_SignBankVariant=4693'], 'thank you': ['occurrence?id_SignBankVariant=4665'], 'happy': ['occurrence?id_SignBankVariant=1460', 'occurrence?id_SignBankVariant=93'], 'hello': ['occurrence?id_SignBankVariant=1486'], 'like': ['occurrence?id_SignBankVariant=1723'], 'meet': ['occurrence?id_SignBankVariant=1810'], 'more': ['occurrence?id_SignBankVariant=1852'], 'no': ['occurrence?id_SignBankVariant=27'], 'sad': ['occurrence?id_SignBankVariant=2423'], 'sorry': ['occurrence?id_SignBankVariant=2633'], 'want': ['occurrence?id_SignBankVariant=3012'], 'bye': ['occurrence?id_SignBankVariant=3028'], 'why': ['occurrence?id_SignBankVariant=3060', 'occurrence?id_SignBankVariant=126'], 'yes': ['occurrence?id_SignBankVariant=43', 'occurrence?id_SignBankVariant=3102'], 'me': ['occurrence?id_SignBankVariant=1612'], 'you': ['occurrence?id_SignBankVariant=1615'], 'she': ['occurrence?id_SignBankVariant=1620']}
 def download_from_endpoints(sign_endpoints):
@@ -201,5 +186,4 @@ def download_from_endpoints(sign_endpoints):
 
 
 # Script entry point
-# get_endpoints()
-get_all_words()
+get_endpoints()
