@@ -99,7 +99,11 @@ def get_endpoints():
 
 
 # sign_endpoints = {'bad': ['occurrence?id_SignBankVariant=506'], 'easy': ['occurrence?id_SignBankVariant=1065'], 'good': ['occurrence?id_SignBankVariant=4693'], 'thank you': ['occurrence?id_SignBankVariant=4665'], 'happy': ['occurrence?id_SignBankVariant=1460', 'occurrence?id_SignBankVariant=93'], 'hello': ['occurrence?id_SignBankVariant=1486'], 'like': ['occurrence?id_SignBankVariant=1723'], 'meet': ['occurrence?id_SignBankVariant=1810'], 'more': ['occurrence?id_SignBankVariant=1852'], 'no': ['occurrence?id_SignBankVariant=27'], 'sad': ['occurrence?id_SignBankVariant=2423'], 'sorry': ['occurrence?id_SignBankVariant=2633'], 'want': ['occurrence?id_SignBankVariant=3012'], 'bye': ['occurrence?id_SignBankVariant=3028'], 'why': ['occurrence?id_SignBankVariant=3060', 'occurrence?id_SignBankVariant=126'], 'yes': ['occurrence?id_SignBankVariant=43', 'occurrence?id_SignBankVariant=3102'], 'me': ['occurrence?id_SignBankVariant=1612'], 'you': ['occurrence?id_SignBankVariant=1615'], 'she': ['occurrence?id_SignBankVariant=1620']}
-def download_from_endpoints(sign_endpoints):
+sign_endpoints = {'a': ['occurrence?id_SignBankVariant=373'], 'b': ['occurrence?id_SignBankVariant=497'], 'c': ['occurrence?id_SignBankVariant=691'], 'd': ['occurrence?id_SignBankVariant=924'], 'e': ['occurrence?id_SignBankVariant=1052'], 'f': ['occurrence?id_SignBankVariant=1164'], 'g': ['occurrence?id_SignBankVariant=1341'], 'h': ['occurrence?id_SignBankVariant=1432'], 'i': ['occurrence?id_SignBankVariant=1540'], 'j': ['occurrence?id_SignBankVariant=1621'], 'k': ['occurrence?id_SignBankVariant=1639'], 'l': ['occurrence?id_SignBankVariant=1665'], 'm': ['occurrence?id_SignBankVariant=1777'], 'n': ['occurrence?id_SignBankVariant=1881'], 'o': ['occurrence?id_SignBankVariant=2088'], 'p': ['occurrence?id_SignBankVariant=2140'], 'q': ['occurrence?id_SignBankVariant=2318'], 'r': ['occurrence?id_SignBankVariant=2329'], 's': ['occurrence?id_SignBankVariant=2422'], 't': ['occurrence?id_SignBankVariant=2758'], 'u': ['occurrence?id_SignBankVariant=2941'], 'v': ['occurrence?id_SignBankVariant=2965'], 'w': ['occurrence?id_SignBankVariant=3002'], 'x': ['occurrence?id_SignBankVariant=3095'], 'y': ['occurrence?id_SignBankVariant=3097'], 'z': ['occurrence?id_SignBankVariant=3106']}
+def download_from_endpoints():
+    if not os.path.exists(DOWNLOAD_FOLDER):
+        os.makedirs(DOWNLOAD_FOLDER)
+
     for sign in sign_endpoints.keys():
         print(f'-- {sign} --')
         if not os.path.exists(f'{DOWNLOAD_FOLDER}/{sign}'):
@@ -186,4 +190,5 @@ def download_from_endpoints(sign_endpoints):
 
 
 # Script entry point
-get_endpoints()
+# get_endpoints()
+download_from_endpoints()
