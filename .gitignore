@@ -13,6 +13,7 @@ __pycache__/*
 # Data files not ready to be pushed
 history/*
 inputs/raw/*
+inputs/raw-2/*
 runs/*
 ali/*
 dataset_joint/*
