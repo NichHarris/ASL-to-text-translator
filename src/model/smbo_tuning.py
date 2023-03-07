@@ -53,7 +53,8 @@ BATCH_SIZE = 64
 TEST_BATCH_SIZE = 8
 
 # -- Constants -- #
-DATASET_PATH = os.path.abspath('../../inputs/dataset_no_aug')
+DATASET_NAME = 'dataset_no_aug'
+DATASET_PATH = os.path.abspath(f'../../inputs/{DATASET_NAME}')
 DATASET_FILES = os.listdir(DATASET_PATH)
 DATASET_SIZE = len(DATASET_FILES)
 
@@ -195,13 +196,17 @@ def objective(params):
 algo = BayesOptSearch()
 algo = ConcurrencyLimiter(algo, max_concurrent=4)
 
+TUNER_METRIC = 'validation_loss' #"model_accuracy" #
+TUNER_MODE = 'min'#"max" #
+log_file_name = f'{DATASET_NAME}_{TUNER_MODE}_{TUNER_METRIC}.log'
+
 # Integrate Raytune with Optuna 
 tuner = tune.Tuner(
     objective,
-    run_config=air.RunConfig(log_to_file=True),
+    run_config=air.RunConfig(log_to_file=log_file_name),
     tune_config=tune.TuneConfig(
-        metric='validation_loss',#"model_accuracy", #
-        mode='min',#"max", #
+        metric=TUNER_METRIC,
+        mode=TUNER_MODE,
         search_alg=algo,
         num_samples=4
     ),
