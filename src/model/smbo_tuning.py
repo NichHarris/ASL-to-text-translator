@@ -198,6 +198,7 @@ algo = ConcurrencyLimiter(algo, max_concurrent=4)
 # Integrate Raytune with Optuna 
 tuner = tune.Tuner(
     objective,
+    run_config=air.RunConfig(log_to_file=True),
     tune_config=tune.TuneConfig(
         metric='validation_loss',#"model_accuracy", #
         mode='min',#"max", #
