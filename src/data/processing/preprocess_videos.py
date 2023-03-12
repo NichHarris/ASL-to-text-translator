@@ -44,10 +44,10 @@ DATA_PATH = "../../../inputs/raw"
 # "../../../data_nick"
 PREPROCESS_PATH = "../../../inputs/interim"
 
-# Total landmarks: 21*3 * 2 (L/R Hands) + 25 * 4 (Pose)
-NUM_LANDMARKS = 226 
+# Total landmarks: 21*3 * 2 (L/R Hands) + 25*3 (Pose)
+NUM_LANDMARKS = 201 
 HAND_LANDMARKS = 21 * 3
-POSE_LANDMARKS = 25 * 4
+POSE_LANDMARKS = 25 * 3
 
 # Process and convert video to landmarks array
 def processing_data(cap, holistic):
@@ -76,7 +76,7 @@ def processing_data(cap, holistic):
 
         # No hand detected
         if not results.left_hand_landmarks:
-            left_hand = torch.zeros(21 * 3)
+            left_hand = torch.zeros(HAND_LANDMARKS)
         # Hand detected
         else:
             # Add left hand keypoints (21 w/ 3d coordinates)
@@ -88,7 +88,7 @@ def processing_data(cap, holistic):
                 left_hand[shift_ind + 2] = landmark.z            
     
         if not results.right_hand_landmarks:
-            right_hand = torch.zeros(21 * 3)
+            right_hand = torch.zeros(HAND_LANDMARKS)
         else:
             # Add right hand keypoints (21 w/ 3d coordinates)
             rh = results.right_hand_landmarks
@@ -100,21 +100,20 @@ def processing_data(cap, holistic):
 
         # No pose detected
         if not results.pose_landmarks:
-            pose = torch.zeros(25 * 4)
+            pose = torch.zeros(POSE_LANDMARKS)
         # Pose detected
         else:
-            # Add pose keypoints (25 w/ 3d coordinates plus visbility probability)
+            # Add pose keypoints (25 w/ 3d coordinates)
             pl = results.pose_landmarks
             for k, landmark in enumerate(pl.landmark):
                 # Ignore lower body (landmarks #25-33)
                 if k >= 25:
                     break
 
-                shift_ind = k * 4
+                shift_ind = k * 3
                 pose[shift_ind] = landmark.x
                 pose[shift_ind + 1] = landmark.y
                 pose[shift_ind + 2] = landmark.z  
-                pose[shift_ind + 3] = landmark.visibility  
 
         # Add processed frames, each as tensor
         processed_frames.append(torch.cat([left_hand, right_hand, pose], 0))
@@ -131,21 +130,18 @@ def main():
 
     # Instantiate holistic model, specifying minimum detection and tracking confidence levels
     holistic = mp_holistic.Holistic(
-        static_image_mode=True,
+        static_image_mode=False,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5) 
 
     # Get all actions/gestures names
     actions = listdir(DATA_PATH)
-    for action in actions:
-        print(f"\n--- Starting {action} preprocessing ---")
+    num_actions = len(actions)
+    for i, action in enumerate(actions):
+        print(f"\n--- Starting {action} preprocessing ({i + 1}/{num_actions}) ---")
         preprocess_folder = f"{PREPROCESS_PATH}/{action}"
         if not path.exists(preprocess_folder):
             makedirs(preprocess_folder)
-        # Optional: Skip directory if already exists
-        # else: 
-        #     print(f'Skipping {action}')
-        #     continue
 
         # Get all filenames for preprocessing each
         action_folder = f"{DATA_PATH}/{action}"
@@ -155,8 +151,8 @@ def main():
         for video in videos:
             vid_name = video.split(".")[0]
             # Skip already processed videos
-            if path.exists(f'{preprocess_folder}/{vid_name}.pt'):
-                continue
+            # if path.exists(f'{preprocess_folder}/{vid_name}.pt'):
+            #     continue
 
             print(f"\n-- Preprocessing video {vid_name} --")
 
