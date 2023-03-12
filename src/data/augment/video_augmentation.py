@@ -63,7 +63,7 @@ def store_frames(video):
 
 
 # Pass augmentation sequence and file name
-def augment_video(seq, frames, curr_folder, vid_name, fps):
+def augment_video(seq, frames, curr_folder, vid_name, fps, transform='flip'):
     # Augment frames
     aug_vid = seq(frames)
     height, width, _ = aug_vid[0].shape
@@ -74,7 +74,7 @@ def augment_video(seq, frames, curr_folder, vid_name, fps):
     video_writer = cv2.VideoWriter_fourcc(*fourcc)
 
     # Save video 
-    out = cv2.VideoWriter(f"{DATA_PATH}/{curr_folder}/{vid_name}_flip.mp4", video_writer, fps, (width, height))
+    out = cv2.VideoWriter(f"{DATA_PATH}/{curr_folder}/{vid_name}_{transform}.mp4", video_writer, fps, (width, height))
     for frame in aug_vid:
         out.write(frame)
     out.release()
@@ -113,10 +113,65 @@ def main():
             frames, fps = store_frames(f"{DATA_PATH}/{action}/{video}")
 
             # Augment video using frames
-            _, height, width, _ = frames.shape
             augment_video(flip_seq, frames, action, vid_name, fps)
         
     end_time = time.time()
     print("\nTotal Video Augmentation Time (s): ", end_time - start_time)
 
 main()
+
+'''
+# IP: Potential video cropping augmentation
+def zoom_translation_aug(frames, action, vid_name, fps):
+    height, width, _ = frames[0].shape
+
+    # Aug count: 4 (+2 (2*1) x 2)
+    # Crop video from center to specific dimensions
+    factors = [0.95, 0.975]
+    # [0.925, 0.95, 0.975]
+    for factor in factors:
+        center_crop_seq = va.Sequential([ va.CenterCrop(size=(int(height * factor), int(width * factor))) ])
+        aug_frames = augment_video(center_crop_seq, frames, action, vid_name, fps, 'crop_cc')
+
+    # Aug count: 20 (+8 (4*2) x2)
+    # Crop video from specific corner to specific dimensions
+    corners = ['tl', 'tr', 'bl', 'br']
+    for corner in corners:
+        for factor in factors:
+            corner_crop_seq =  va.Sequential([ va.CornerCrop(size=(int(height * factor), int(width * factor )), crop_position=corner) ])
+            aug_frames = augment_video(corner_crop_seq, frames, action, vid_name, fps, f'crop_{corner}')
+
+def cropping_script():
+    start_time = time.time()
+
+    # Get all actions/gestures names
+    actions = os.listdir(DATA_PATH)
+    for action in actions:
+        print(f"\n-- Starting {action} augmentation --")
+
+        # Get all filenames for augmentating each
+        videos = os.listdir(f"{DATA_PATH}/{action}")
+
+        # Augment video by video
+        for video in videos:
+            # Skip cropping if cropped videos
+            if '_crop' in video:
+                continue
+
+            # Skip cropping if file already exists
+            vid_name, *_ = video.split('.mp4')
+            if os.path.isfile(f'{DATA_PATH}/{action}/{vid_name}_crop_cc.mp4'):
+                print(f"- Skipping: {vid_name} -")
+                continue
+            
+            print(f"- {vid_name} -")
+
+            # Capture frames per video
+            frames, fps = store_frames(f"{DATA_PATH}/{action}/{video}")
+
+            # Augment video using frames
+            zoom_translation_aug(frames, action, vid_name, fps)
+
+            end_time = time.time()
+            print("\nTotal Video Augmentation Time (s): ", end_time - start_time)
+'''
