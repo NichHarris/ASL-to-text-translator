@@ -2,7 +2,8 @@
 Fit data instances to 48 frames for training and testing neural network
 - Create new directory to store dataset
 - Load each data instance and compute number of frames
-- Determine 
+- Randomly sample the frames to duplicate or delete
+- Fit data instance by removing additional or inserting duplicate frames
 
 Execution Time: 13s for 5 words
 New Execution Time: 201s for 5 words
@@ -16,10 +17,11 @@ import torch
 import math
 from os import listdir, path, makedirs
 
-DATASET_PATH = "../../../dataset_me"
-PREPROCESS_PATH = "../../../preprocess-me"
+# Upload to google cloud bucket: gsutil -m cp -r dataset_next_42_rot_only_no_vis gs://intera-nn
+DATASET_PATH = "../../../inputs/dataset_next_42_rot_only_no_vis"
+PREPROCESS_PATH = "../../../inputs/interim"
 
-INPUT_SIZE = 226
+INPUT_SIZE = 201
 NUM_SEQUENCES = 48
 
 def main():
@@ -29,8 +31,9 @@ def main():
 
     # Get all actions/gestures names
     actions = listdir(PREPROCESS_PATH)
-    for action in actions:
-        print(f"\n--- Starting {action} temporal fit ---")
+    num_actions = len(actions)
+    for i, action in enumerate(actions):
+        print(f"\n--- Starting {action} temporal fit ({i + 1}/{num_actions}) ---")
 
         # Get all filenames for temporal fit to 48 frames
         videos = listdir(f"{PREPROCESS_PATH}/{action}")
@@ -38,6 +41,10 @@ def main():
         # Augment video by video
         for video in videos:
             print(f"\n-- Temporal fit video {video} --")
+            # Skip already fitted videos
+            if path.exists(f'{DATASET_PATH}/{action}_{video}'):
+                print(f"-- Skipped --")
+                continue
 
             # Load data instance
             frames = torch.load(f"{PREPROCESS_PATH}/{action}/{video}")
