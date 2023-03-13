@@ -15,7 +15,7 @@ import time
 import random
 import torch
 import math
-from os import listdir, path, makedirs
+from os import listdir, path, makedirs, remove
 
 # Upload to google cloud bucket: gsutil -m cp -r dataset_next_42_rot_only_no_vis gs://intera-nn
 DATASET_PATH = "../../../inputs/dataset_next_42_rot_only_no_vis"
@@ -40,11 +40,11 @@ def main():
 
         # Augment video by video
         for video in videos:
-            print(f"\n-- Temporal fit video {video} --")
             # Skip already fitted videos
             if path.exists(f'{DATASET_PATH}/{action}_{video}'):
-                print(f"-- Skipped --")
                 continue
+
+            print(f"\n-- Temporal fit video {video} --")
 
             # Load data instance
             frames = torch.load(f"{PREPROCESS_PATH}/{action}/{video}")
@@ -54,7 +54,13 @@ def main():
             missing_frames = NUM_SEQUENCES - num_frames
 
             if missing_frames == 0:
-                print(f'Data already fitted to {NUM_SEQUENCES} frames')
+                # Adjust format to torch tensors
+                torch_frames = torch.zeros([NUM_SEQUENCES, INPUT_SIZE], dtype=torch.float)
+                for seq, frame in enumerate(frames):
+                    torch_frames[seq] = frame
+                
+                # Save updated frames
+                torch.save(torch_frames, f'{DATASET_PATH}/{action}_{video}')
                 continue
             
             is_over_limit = missing_frames < 0
