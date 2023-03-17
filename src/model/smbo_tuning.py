@@ -198,7 +198,7 @@ algo = ConcurrencyLimiter(algo, max_concurrent=4)
 
 TUNER_METRIC = 'validation_loss' #"model_accuracy" #
 TUNER_MODE = 'min'#"max" #
-log_file_name = f'{DATASET_NAME}_{TUNER_MODE}_{TUNER_METRIC}.log'
+log_file_name = f'.\logs\{DATASET_NAME}_{TUNER_MODE}_{TUNER_METRIC}.log'
 
 # Integrate Raytune with Optuna 
 tuner = tune.Tuner(
@@ -227,12 +227,11 @@ best_trial = res.get_best_result()
 print("Best trial: ", best_trial)
 print("Best hyperparameters found were: ", best_trial.config)
 
-'''
+
 trainable_with_resources = tune.with_resources(
-    trainable,
+    objective,
     {
         'gpu': 1,
         'cpu': 4
     }
-)
-'''
+)   

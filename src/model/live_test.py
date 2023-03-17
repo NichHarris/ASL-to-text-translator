@@ -4,6 +4,7 @@ import torch
 import random
 import math
 import os
+import time
 
 from asl_model import AslNeuralNetwork
 
@@ -33,7 +34,7 @@ def processing_frame(frame, holistic):
             shift_ind = i * 3
             left_hand[shift_ind] = landmark.x
             left_hand[shift_ind + 1] = landmark.y
-            left_hand[shift_ind + 2] = landmark.z            
+            left_hand[shift_ind + 2] = landmark.z      
 
     if not results.right_hand_landmarks:
         right_hand = torch.zeros(21 * 3)
@@ -97,9 +98,22 @@ def get_holistic_model():
     holistic = mp_holistic.Holistic(
         static_image_mode=True,
         min_detection_confidence=0.5,
-        min_tracking_confidence=0.5) 
+        min_tracking_confidence=0.5,
+    ) 
     
     return holistic
+
+def quick_fit(frames):
+    num_frames = len(frames)
+    missing_frames = abs(NUM_SEQUENCES - num_frames)
+    frame_pop = range(num_frames)
+
+    frame_indices = sorted(random.sample(frame_pop, missing_frames), reverse=True)
+
+    for frame_index in frame_indices:
+        frames.pop(frame_index)
+
+    return frames
 
 INPUT_SIZE = 226
 NUM_SEQUENCES = 48
@@ -151,15 +165,11 @@ def softmax(output):
     return e / e.sum()
 
 INPUT_SIZE = 226 # 226 datapoints from 67 landmarks - 21 in x,y,z per hand and 25 in x,y,z, visibility for pose
-SEQUENCE_LEN = 48 # 48 frames per video
-NUM_RNN_LAYERS = 3 # 3 LSTM Layers
-
-LSTM_HIDDEN_SIZE = 128 # 128 nodes in LSTM hidden layers
-FC_HIDDEN_SIZE = 64 # 64 nodes in Fc hidden layers
+NUM_RNN_LAYERS = 4 # 3 LSTM Layers
 OUTPUT_SIZE = 20 # Starting with 5 classes = len(word_dict)
 
 MODEL_PATH = "../../models"
-LOAD_MODEL_VERSION = "v3.0_15"
+LOAD_MODEL_VERSION = "v4.4" #"v4.0_39" # 
 # v2.5_14 works great (82% and 31%)
 # v2.9_15 works even better (88% and 50%)
 # v3.0_11 (91% and 46%)
@@ -168,7 +178,7 @@ LOAD_MODEL_VERSION = "v3.0_15"
 # v3.3_end very bad (26%, 33%)
 
 def load_model():
-    model = AslNeuralNetwork(INPUT_SIZE, LSTM_HIDDEN_SIZE, FC_HIDDEN_SIZE, OUTPUT_SIZE)
+    model = AslNeuralNetwork(num_lstm_layers=NUM_RNN_LAYERS)
     
     model_state_dict = torch.load(f'{MODEL_PATH}/asl_model_{LOAD_MODEL_VERSION}.pth')
     model.load_state_dict(model_state_dict)
@@ -255,10 +265,15 @@ def live_single_sign_test():
 
     # TODO: Add check to see if video is too short (<12) or too long (>96) on len(frames)
     print(len(frames))
+    start_time = time.time()
 
     # Release the camera and close the window
     cap.release()
     cv2.destroyAllWindows()
+
+    if len(frames) > 55:
+        frames = quick_fit(frames)
+        # print(len(frames))
 
     # Mediapipe keypoint extraction
     mp_frames = []
@@ -273,10 +288,11 @@ def live_single_sign_test():
     # Pass keypoints to model
     successful_pred = testing_data(sign_word, keypoints)
     if successful_pred:
-        print('Succesfully predicted word live!')
+        print(f'Succesfully predicted the word: {sign_word}!')
     else:
         print('Please try again...')
-
+    end_time = time.time()
+    print(f"Processing time: {end_time - start_time}")
 
 # Automated testing from saved sample videos
 def automated_testing():
@@ -329,7 +345,7 @@ def automated_testing():
 
 def fast_automated_testing():
     accuracy = 0
-    processed_testing_path = f'../../processed_tests/ali' #f'../../processed_tests/nick' #
+    processed_testing_path =  f'../../processed_tests/ali_no_vis' #f'../../processed_tests/nick_no_vis'
 
     videos = os.listdir(processed_testing_path)
     for video in videos: 
@@ -337,12 +353,12 @@ def fast_automated_testing():
         keypoints = torch.load(f'{processed_testing_path}/{video}')
 
         # Pass keypoints to model
-        successful_pred = testing_data(sign_word, keypoints)
+        successful_pred = testing_data(sign_word, keypoints.unsqueeze(0))
         if successful_pred:
             accuracy += 1
     
     print(signs)
-    print(f'{accuracy}/{len(videos)} = {accuracy/len(videos)}')
+    print(f'\n{accuracy}/{len(videos)} = {accuracy/len(videos):.4f}')
     print(f'using model {LOAD_MODEL_VERSION}')
 
 
@@ -350,13 +366,14 @@ holistic = get_holistic_model()
 
 # Notes:
 # Model 1.0, 1.2, 1.3 (1.1 with dataset3)
-# Model 2.0 provides 87% on my dataset
-# Model 2.5 
-# Model 2.9 v20 85% and 51%
+# Model 2.0 87%
+# Model 2.9 v20 85%
+# Model 3.1_15 90%
+# Model 3.4_5
 model = load_model()
 
 is_automated = True
-is_fast_comparison = False
+is_fast_comparison = True
 if is_automated:
     if is_fast_comparison:
         fast_automated_testing()

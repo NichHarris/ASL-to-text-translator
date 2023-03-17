@@ -282,4 +282,38 @@ on 20 words
     -> 39% on Ali dataset
 - 3.3 / 3.8 : 
 
+
+- 3.4 / 3.9 : Bidirectional 3 layers w/ only wlasl videos
+
+
+
+- 4.0 / : Bidirectional 4 lstm layers w/ 2 fc layers (instead of 3) w/ wlasl + asllrp  w/ learning rate scheduler 
+    -> 39% accuracy at epoch 55, not augmented but ambidextrous recognition
+    -> Needed 72 epochs to get to 13% training error 
+- 4.1 / : Bidirectional 4 lstm layers w/ 2 fc layers (instead of 3) w/ wlasl + asllrp 
+    -> 33% accuracy at epoch 33, not augmented and with no visibility 
+    -> Needed 47 epochs to get to 7% training error and 55 epochs <0.01%
+
+
+- 4.2 / : Bidirectional 5 lstm layers w/ 2 fc layers (instead of 3) w/ wlasl + asllrp 
+    -> Crashed
+
+- 4.3 / : Bidirectional 4 lstm layers w/ 2 fc layers (instead of 3) w/ wlasl + asllrp 
+    -> 25% accuracy, rotation only augmented but ambidextrous recognition w/ visbility
+    -> Needed 9 epochs to get to <1% training error
+
+- 4.4 / : Bidirectional 4 lstm layers w/ 2 fc layers (instead of 3) w/ wlasl + asllrp  and dropout 0.2 on lstm
+    -> 39% at epoch 
+    -> Needed for 42 epochs to get to 25% error
+
+- 4.4.2 / : Bidirectional 4 lstm layers w/ 2 fc layers (instead of 3) w/ wlasl + asllrp  and dropout 0.25
+    -> 37% at epoch 44, not augmented and with no visibility 
+    -> Needed 47 epochs to get to 80% training error
+
+- 4.5 / : Bidirectional 4 lstm layers w/ 2 fc layers (instead of 3) w/ wlasl + asllrp and dropout 0.5
+    -> 37% at epoch 44, not augmented and with no visibility 
+    -> Needed 47 epochs to get to 80% training error
+
+# -> 25% accuracy, rotation only augmented but ambidextrous recognition w/ visbility
+    -> 
 '''
