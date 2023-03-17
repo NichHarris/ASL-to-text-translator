@@ -114,11 +114,12 @@ def download_videos(indexfile, saveto):
     json_file = open(indexfile)
     content = json.load(json_file)
     
-    sign_words = ['hello', 'bye', 'me/I', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'he/she/they', 'bad', 'happy', 'sad', 'sorry', 'like', 'want', 'easy', 'meet', 'more', 'why']
-    new_sign_words = ['a', 'b', 'c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-    # ['again', 'learn', 'sign', 'hard']
+    # 62 words
+    # TODO: 'excuse', 'hard', 'less'
+    sign_words = ['hello', 'bye/goodbye', 'me/I', 'you', 'he/she/they', 'yes', 'no', 'thank you', 'sorry', 'please', 'good', 'bad', 'happy', 'sad', 'easy', 'more', 'like', 'want', 'meet', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'how', 'what', 'who', 'why', 'when', 'where', 'which']
+    new_sign_words = []
 
-    # Next 5 words: again/repeat, less, learn, sign, done/finish
+    # top_100 = {'afternoon', 'answer', 'big', 'buy', 'can', 'day', 'evening', 'excuse', 'forget', 'give', 'hear', 'here', 'in', 'know', 'left', 'love', 'month', 'morning', 'name', 'night', 'out', 'question', 'read', 'remember', 'right', 'see', 'sell', 'small', 'take', 'think', 'time', 'today', 'tomorrow', 'understand', 'week', 'with', 'write', 'wrong', 'yesterday'}
     # Note: c, l, x, y, z missing in words
 
     if not os.path.exists(saveto):

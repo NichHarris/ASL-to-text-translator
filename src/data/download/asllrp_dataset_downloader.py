@@ -9,6 +9,7 @@ DOWNLOAD_FOLDER = '../../../inputs/raw-2'
 
 base_url = 'http://dai.cs.rutgers.edu/dai/s'
 home_url = f'{base_url}/signbank'
+sign_id_url = f'{base_url}/occurrence?id_SignBankVariant='
 
 def extract_endpoint_from_js(js_code: str) -> str :
     start_ep = js_code.find("'") + 1
@@ -85,8 +86,8 @@ def get_endpoints():
 
             # TODO: Modify how to obtain word
             word, endpoint = line.split("\t")
-            # if word in recognized_sign_words:
-            if len(word) <= 1:
+            if word in recognized_sign_words:
+            # if recognized_sign_words in :
                 # print(f'{word} {endpoint}')
                 
                 # Deal with same word appearing multiple times for slang
@@ -97,9 +98,7 @@ def get_endpoints():
             
     print(sign_endpoints)
 
-
-# sign_endpoints = {'bad': ['occurrence?id_SignBankVariant=506'], 'easy': ['occurrence?id_SignBankVariant=1065'], 'good': ['occurrence?id_SignBankVariant=4693'], 'thank you': ['occurrence?id_SignBankVariant=4665'], 'happy': ['occurrence?id_SignBankVariant=1460', 'occurrence?id_SignBankVariant=93'], 'hello': ['occurrence?id_SignBankVariant=1486'], 'like': ['occurrence?id_SignBankVariant=1723'], 'meet': ['occurrence?id_SignBankVariant=1810'], 'more': ['occurrence?id_SignBankVariant=1852'], 'no': ['occurrence?id_SignBankVariant=27'], 'sad': ['occurrence?id_SignBankVariant=2423'], 'sorry': ['occurrence?id_SignBankVariant=2633'], 'want': ['occurrence?id_SignBankVariant=3012'], 'bye': ['occurrence?id_SignBankVariant=3028'], 'why': ['occurrence?id_SignBankVariant=3060', 'occurrence?id_SignBankVariant=126'], 'yes': ['occurrence?id_SignBankVariant=43', 'occurrence?id_SignBankVariant=3102'], 'me': ['occurrence?id_SignBankVariant=1612'], 'you': ['occurrence?id_SignBankVariant=1615'], 'she': ['occurrence?id_SignBankVariant=1620']}
-sign_endpoints = {'a': ['occurrence?id_SignBankVariant=373'], 'b': ['occurrence?id_SignBankVariant=497'], 'c': ['occurrence?id_SignBankVariant=691'], 'd': ['occurrence?id_SignBankVariant=924'], 'e': ['occurrence?id_SignBankVariant=1052'], 'f': ['occurrence?id_SignBankVariant=1164'], 'g': ['occurrence?id_SignBankVariant=1341'], 'h': ['occurrence?id_SignBankVariant=1432'], 'i': ['occurrence?id_SignBankVariant=1540'], 'j': ['occurrence?id_SignBankVariant=1621'], 'k': ['occurrence?id_SignBankVariant=1639'], 'l': ['occurrence?id_SignBankVariant=1665'], 'm': ['occurrence?id_SignBankVariant=1777'], 'n': ['occurrence?id_SignBankVariant=1881'], 'o': ['occurrence?id_SignBankVariant=2088'], 'p': ['occurrence?id_SignBankVariant=2140'], 'q': ['occurrence?id_SignBankVariant=2318'], 'r': ['occurrence?id_SignBankVariant=2329'], 's': ['occurrence?id_SignBankVariant=2422'], 't': ['occurrence?id_SignBankVariant=2758'], 'u': ['occurrence?id_SignBankVariant=2941'], 'v': ['occurrence?id_SignBankVariant=2965'], 'w': ['occurrence?id_SignBankVariant=3002'], 'x': ['occurrence?id_SignBankVariant=3095'], 'y': ['occurrence?id_SignBankVariant=3097'], 'z': ['occurrence?id_SignBankVariant=3106']}
+sign_endpoints = {}
 def download_from_endpoints():
     if not os.path.exists(DOWNLOAD_FOLDER):
         os.makedirs(DOWNLOAD_FOLDER)
@@ -111,7 +110,7 @@ def download_from_endpoints():
         
         word_endpoints = sign_endpoints[sign]
         for word_endpoint in word_endpoints:
-            res = requests.get(f'{base_url}/{word_endpoint}', headers=headers) 
+            res = requests.get(f'{sign_id_url}{word_endpoint}', headers=headers) 
 
             # Check if link contains embedded video
             soup = BeautifulSoup(res.content, "html.parser")
@@ -187,6 +186,59 @@ def download_from_endpoints():
                         file.write(res.content)
                 
                 print(data_source, video_id, video_url)
+
+
+def get_english_translation(word, endpoint):
+    # Get id from endpoint
+    pre, id_no = endpoint.split('=')
+    trans_endpoint = f'translation?id={id_no}'
+    print(trans_endpoint)
+
+    # Make get request
+    trans_url = f'{base_url}/{trans_endpoint}'
+    res = requests.get(trans_url, headers=headers) 
+
+    # Extract translation using beautiful soup
+    soup = BeautifulSoup(res.content, "html.parser")
+    translation_html = soup.find('textarea', {'id': 'translation'})
+
+    return translation_html.text if translation_html is not None else word
+
+def save_english_word_links():
+    with open('new_asl_words_links.txt', 'w') as new_file:
+        with open('asllrp_words_links.txt', 'r') as asl_file:
+            for line in asl_file:
+                line = line.strip()
+                if not line:
+                    new_file.write("\n")
+                    continue
+
+                word, endpoint = line.split("\t")
+                translation = get_english_translation(word, endpoint)
+                print(translation)
+
+                new_file.write(f"{translation}\t{endpoint}\n")
+
+def get_dataset_words_endpoints():
+    # 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+    top_100 = ['how', 'what', 'who', 'why', 'when', 'where', 'which']
+    # {'afternoon', 'answer', 'bad', 'big', 'buy', 'bye', 'can', 'day', 'easy', 'evening', 'excuse me', 'forget', 'give', 'good', 'happy', 'hear', 'hello', 'here', 'in', 'know', 'left', 'like', 'love', 'me', 'meet', 'month', 'more', 'morning', 'name', 'night', 'no', 'out', 'please', 'question', 'read', 'remember', 'right', 'sad', 'see', 'sell', 'she', 'small', 'sorry', 'take', 'thank you', 'think', 'time', 'today', 'tomorrow', 'understand', 'want', 'week', 'what', 'when', 'where', 'which', 'who', 'why', 'with', 'write', 'wrong', 'yes', 'yesterday', 'you'}
+    with open('question_links.txt', 'w') as top_100_file:
+        with open('asl_words_en_translation_links.txt', 'r') as asl_file:
+            i = 0
+            for line in asl_file:
+                # Remove new line and ignore empty lines
+                line = line.strip()
+                if not line:
+                    continue
+
+                # Check if the first word contains a substring of a word in the dictionary
+                title, word, endpoint = line.split("\t")
+                for top_one in top_100:
+                    if top_one in word:
+                        # Word found, sign gloss, english translation, endpoint
+                        top_100_file.write(f"{top_one}\t{title}\t{word}\t{endpoint}\n")
+                        break
 
 
 # Script entry point
