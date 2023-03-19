@@ -18,8 +18,11 @@ import math
 from os import listdir, path, makedirs, remove
 
 # Upload to google cloud bucket: gsutil -m cp -r dataset_next_42_rot_only_no_vis gs://intera-nn
-DATASET_PATH = "../../../inputs/dataset_next_42_rot_only_no_vis"
-PREPROCESS_PATH = "../../../inputs/interim"
+# gsutil -m cp -r top_62_scaled gs://intera-nn
+DATASET_PATH = "../../../inputs/top_62_ali"
+# "../../../inputs/top_62_scaled"
+PREPROCESS_PATH = "../../../tests/ali_top_62"
+# "../../../inputs/interim-2"
 
 INPUT_SIZE = 201
 NUM_SEQUENCES = 48
@@ -43,6 +46,8 @@ def main():
             # Skip already fitted videos
             if path.exists(f'{DATASET_PATH}/{action}_{video}'):
                 continue
+            # if '_scale_' not in video:
+            #     continue
 
             print(f"\n-- Temporal fit video {video} --")
 
