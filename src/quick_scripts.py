@@ -378,3 +378,16 @@ for action in ali_actions:
         
         torch.save(new_frames, f'{BASE_DIR}/{action}/{video}')
 '''
+'''
+for action in os.listdir('../inputs/interim'):
+    i = 0
+    total = 0
+    for vid in os.listdir(f'../inputs/interim/{action}'):
+        if '_scale' not in vid and '_rot' not in vid:
+            if '_T' in vid or '_R' in vid or '_D' in vid or '_S' in vid:
+                print(f'inputs/interim/{action}/{vid}', end=" ")
+                i+=1
+            total += 1
+        
+    # print(i, total,  "\n")
+'''
