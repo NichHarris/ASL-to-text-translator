@@ -118,16 +118,16 @@ def main():
     end_time = time.time()
     print("\nTotal Video Augmentation Time (s): ", end_time - start_time)
 
-main()
+# main()
 
-'''
 # IP: Potential video cropping augmentation
 def zoom_translation_aug(frames, action, vid_name, fps):
     height, width, _ = frames[0].shape
 
+    '''
     # Aug count: 4 (+2 (2*1) x 2)
     # Crop video from center to specific dimensions
-    factors = [0.95, 0.975]
+    factors = [0.975]
     # [0.925, 0.95, 0.975]
     for factor in factors:
         center_crop_seq = va.Sequential([ va.CenterCrop(size=(int(height * factor), int(width * factor))) ])
@@ -140,7 +140,20 @@ def zoom_translation_aug(frames, action, vid_name, fps):
         for factor in factors:
             corner_crop_seq =  va.Sequential([ va.CornerCrop(size=(int(height * factor), int(width * factor )), crop_position=corner) ])
             aug_frames = augment_video(corner_crop_seq, frames, action, vid_name, fps, f'crop_{corner}')
+    '''
 
+    translate_seq = va.Sequential([ va.RandomTranslate(x=50, y=50) ])
+    aug_frames = augment_video(translate_seq, frames, action, vid_name, fps, 'trans_x_y')
+
+'''
+# Capture frames per video
+frames, fps = store_frames(f"{DATA_PATH}/bad/bad_04694.mp4")
+
+# Augment video using frames
+zoom_translation_aug(frames, 'bad', 'bad_04694', fps)
+'''
+
+'''
 def cropping_script():
     start_time = time.time()
 
