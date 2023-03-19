@@ -41,7 +41,6 @@ from matplotlib import pyplot as plt
 from os import listdir, makedirs, path  
 
 DATA_PATH = "../../../inputs/raw"
-# "../../../data_nick"
 PREPROCESS_PATH = "../../../inputs/interim"
 
 # Total landmarks: 21*3 * 2 (L/R Hands) + 25*3 (Pose)
@@ -151,8 +150,8 @@ def main():
         for video in videos:
             vid_name = video.split(".")[0]
             # Skip already processed videos
-            # if path.exists(f'{preprocess_folder}/{vid_name}.pt'):
-            #     continue
+            if path.exists(f'{preprocess_folder}/{vid_name}.pt'):
+                continue
 
             print(f"\n-- Preprocessing video {vid_name} --")
 
@@ -164,7 +163,7 @@ def main():
             print(f"Processed: {len(processed_frames)}")
 
             # Save processed data as torch file
-            torch.save(processed_frames, f'{preprocess_folder}/{vid_name}.pt')
+            # torch.save(processed_frames, f'{preprocess_folder}/{vid_name}.pt')
 
             # Close sign language video file capture
             cap.release()
@@ -172,4 +171,55 @@ def main():
     end_time = time.time()
     print("\nTotal Video to Landmarks Preprocessing Time (s): ", end_time - start_time)
 
-main()
+# main()
+
+'''
+# Get Mediapipe holistic solution
+mp_holistic = mp.solutions.holistic
+
+# Instantiate holistic model, specifying minimum detection and tracking confidence levels
+holistic = mp_holistic.Holistic(
+    static_image_mode=False,
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5) 
+
+# Open sign language video file capture
+cap = cv2.VideoCapture(f"{DATA_PATH}/bad/bad_04694_trans_x_y.mp4")
+
+# Processing video using frames
+processed_frames = processing_data(cap, holistic)
+print(f"Processed: {len(processed_frames)}")
+
+# Save processed data as torch file
+torch.save(processed_frames, f'{PREPROCESS_PATH}/bad_04694_trans_x_y.pt')
+
+'''
+cc_arr = torch.load(f"{PREPROCESS_PATH}/bad_04694_trans_x_y.pt")
+none_arr = torch.load(f"{PREPROCESS_PATH}/bad/bad_04694.pt")
+
+# for cf in cc_arr:
+#     cf = torch.reshape(cf, (67, 3))
+# for nf in none_arr:
+#     nf = torch.reshape(nf, (67, 3))
+
+# with open(f"{PREPROCESS_PATH}/compare_files.txt", 'w') as fl:
+# for i, row in enumerate(cc_arr):
+# for i in range(1, 10):
+#     print(none_arr[i][63] - none_arr[i - 1][63])
+# print(
+# '\n'
+# )
+# for i in range(1, 10):
+#     print(cc_arr[i][63] - cc_arr[i - 1][63])
+
+print(torch.reshape(none_arr[12], (67, 3)))
+print('\n')
+print(torch.reshape(cc_arr[12], (67, 3)))
+
+for i in range(40):
+    print(i, torch.reshape(none_arr[i], (67, 3))[24] - torch.reshape(cc_arr[i], (67, 3))[24])
+
+
+# torch.save(cc_arr, f"{PREPROCESS_PATH}/bad_04694_crop_cc.txt")
+# torch.save(none_arr, f"{PREPROCESS_PATH}/bad_04694.txt")
+# fl.write(torch.reshape(none_arr[i], (67, 3)))
