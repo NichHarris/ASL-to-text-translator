@@ -17,12 +17,10 @@ import torch
 import math
 from os import listdir, path, makedirs, remove
 
-# Upload to google cloud bucket: gsutil -m cp -r dataset_next_42_rot_only_no_vis gs://intera-nn
+# Upload to google cloud bucket: gsutil -m cp -r top_62_extra_rot gs://intera-nn
 # gsutil -m cp -r top_62_scaled gs://intera-nn
-DATASET_PATH = "../../../inputs/top_62_ali"
-# "../../../inputs/top_62_scaled"
-PREPROCESS_PATH = "../../../tests/ali_top_62"
-# "../../../inputs/interim-2"
+DATASET_PATH = "../../../inputs/dataset"
+PREPROCESS_PATH = "../../../inputs/interim-2"
 
 INPUT_SIZE = 201
 NUM_SEQUENCES = 48
@@ -46,10 +44,8 @@ def main():
             # Skip already fitted videos
             if path.exists(f'{DATASET_PATH}/{action}_{video}'):
                 continue
-            # if '_scale_' not in video:
-            #     continue
 
-            print(f"\n-- Temporal fit video {video} --")
+            # print(f"\n-- Temporal fit video {video} --")
 
             # Load data instance
             frames = torch.load(f"{PREPROCESS_PATH}/{action}/{video}")
@@ -69,7 +65,7 @@ def main():
                 continue
             
             is_over_limit = missing_frames < 0
-            print(f'Problem: {num_frames}')
+            # print(f'Problem: {num_frames}')
 
             # Must select frames manually 
             missing_frames = abs(missing_frames)
@@ -86,7 +82,7 @@ def main():
             
             # Pick frames randomly to remove or duplicate based on data size
             frame_indices = sorted(random.sample(frame_pop, missing_frames), reverse=True)
-            print(frame_indices)
+            # print(frame_indices)
 
             # Data temporal fit
             if is_over_limit:
@@ -105,7 +101,7 @@ def main():
                 torch_frames[seq] = frame
             
             # Save updated frames
-            print(f'Fixed: {len(frames)}')
+            # print(f'Fixed: {len(frames)}')
             torch.save(torch_frames, f'{DATASET_PATH}/{action}_{video}')
 
     end_time = time.time()
