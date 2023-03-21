@@ -27,7 +27,7 @@ import time
 import torch
 import random
 
-PREPROCESS_PATH = "../../../inputs/interim"
+PREPROCESS_PATH = "../../../inputs/interim-2"
 
 MM_RESHAPE = (67, 3)
 NN_RESHAPE = (-1, )
@@ -51,7 +51,7 @@ def collect_aug_rot(frames, rotation_matrix):
     return aug_frames
 
 # TODO: IP: Need to modify translation script
-def perform_aug_trans(frames, pxz, py, ones_matrix):
+def perform_aug_trans(frames, px, py, pz, ones_matrix):
     aug_frames = []
 
     # Perform augmentation
@@ -131,8 +131,8 @@ def main():
     start_time = time.time()
 
     # Rotation degrees, scaling factors and translation percentages
-    degs = [-5, -4, 4, 5]
-    # [-3, -2, -1, 1, 2, 3]
+    degs = [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5]
+    small_degs = [-2, -1, 1, 2]
     facs = [0.95, 0.975, 0.99, 1.01, 1.025, 1.05]
     percs = [-4.5, -3, -1.5, 1.5, 3, 4.5]
     # x: -3e-02, y: +4e-02, z: 
@@ -149,17 +149,14 @@ def main():
             vid_prefix = video.split('.pt')[0]
             sign_name, video_no, *_ = vid_prefix.split('_') 
 
-            # Skip file if already augmented 
-            # TODO: '_trans_' in vid_prefix or os.path.exists(f"{PREPROCESS_PATH}/{action}/{vid_prefix}_trans_p=0.99.pt")
-            if '_rot_' in vid_prefix or '_scale_' in vid_prefix:
-                # or os.path.exists(f"{PREPROCESS_PATH}/{action}/{vid_prefix}_rot_x=1.pt"):
-                continue
-            
             # Load data instance
             frames = load_sign_video(preprocess_folder, video)
 
-            '''
-            # Perform rotation with multiple degrees
+            # Skip file if already rotation augmented 
+            if '_rot_' in vid_prefix or os.path.exists(f"{PREPROCESS_PATH}/{action}/{vid_prefix}_rot_x=1.pt"):
+                continue
+            
+            # Perform single rotation with multiple degrees
             for degree in degs:
                 theta = math.radians(degree)
 
@@ -172,14 +169,17 @@ def main():
                 aug_x_frames = collect_aug_rot(frames, x_rotation_matrix)
                 aug_y_frames = collect_aug_rot(frames, y_rotation_matrix)
                 aug_z_frames = collect_aug_rot(frames, z_rotation_matrix)
-      
+    
                 # Save augmented frames as torch files
-                # torch.save(aug_x_frames, f'{preprocess_folder}/{vid_prefix}_rot_x={degree}.pt')
-                # torch.save(aug_y_frames, f'{preprocess_folder}/{vid_prefix}_rot_y={degree}.pt')
-                # torch.save(aug_z_frames, f'{preprocess_folder}/{vid_prefix}_rot_z={degree}.pt')
-            '''
+                torch.save(aug_x_frames, f'{preprocess_folder}/{vid_prefix}_rot_x={degree}.pt')
+                torch.save(aug_y_frames, f'{preprocess_folder}/{vid_prefix}_rot_y={degree}.pt')
+                torch.save(aug_z_frames, f'{preprocess_folder}/{vid_prefix}_rot_z={degree}.pt')
 
-            '''
+
+            # Skip file if already scale augmented 
+            if '_scale_' in vid_prefix or os.path.exists(f"{PREPROCESS_PATH}/{action}/{vid_prefix}_scale_k=0.99.pt"):
+                continue
+
             # Perform dilation/scaling with multiple factors
             for factor in facs:
                 # Augment frames using simple multiplicative dilation
@@ -187,23 +187,37 @@ def main():
 
                 # Save augmented frames as torch files
                 torch.save(aug_scale_frames, f'{preprocess_folder}/{vid_prefix}_scale_k={factor}.pt')
-            '''
 
-            # Perform translation with multiple percentages
             '''
-            #TODO: Work in progress
+            # TODO: WIP: Perform translation with multiple percentages
             for x_z_perc in percs:
                 for y_perc in percs:
                     # Augment frames using translation matrix
-                    aug_trans_frames = collect_aug_trans(frames, x_z_perc, y_perc, ones)
+                    aug_trans_frames = collect_aug_trans(frames, x_z_perc, y_perc, x_z_perc, ones)
 
                     # Save augmented frames as torch files
                     # torch.save(aug_scale_frames, f'{preprocess_folder}/{vid_prefix}_trans_x/z={x_z_perc}_y={y_perc}.pt')
             '''
+        
+        '''
+        videos = os.listdir(preprocess_folder)
+        for video in videos:
+            vid_prefix = video.split('.pt')[0]
+            sign_name, video_no, *_ = vid_prefix.split('_') 
 
-            # Perform multiple rotations
-            '''
-            for degree in degs:
+            # Load data instance
+            frames = load_sign_video(preprocess_folder, video)
+
+            # Skip file if not rotated 
+            if '_rot_' not in vid_prefix:
+                continue
+            
+            # Skip file if already has 2+ rotations
+            if vid_prefix.count('_rot') >= 2:
+                continue
+
+            # Perform multiple rotations with multiple small degrees
+            for degree in small_degs:
                 t1 = math.radians(degree)
                 if 'x=' in vid_prefix:
                     y_rotation_matrix = get_rotation_matrix_y(t1)
@@ -212,8 +226,8 @@ def main():
                     aug_y_frames = collect_aug_rot(frames, y_rotation_matrix)
                     aug_z_frames = collect_aug_rot(frames, z_rotation_matrix)
 
-                    # torch.save(aug_y_frames, f'{preprocess_folder}/{vid_prefix}_rot_y={degree}.pt')
-                    # torch.save(aug_z_frames, f'{preprocess_folder}/{vid_prefix}_rot_z={degree}.pt')
+                    torch.save(aug_y_frames, f'{preprocess_folder}/{vid_prefix}_rot_y={degree}.pt')
+                    torch.save(aug_z_frames, f'{preprocess_folder}/{vid_prefix}_rot_z={degree}.pt')
                 elif 'y=' in vid_prefix:
                     x_rotation_matrix = get_rotation_matrix_x(t1)
                     z_rotation_matrix = get_rotation_matrix_z(t1)
@@ -221,8 +235,8 @@ def main():
                     aug_x_frames = collect_aug_rot(frames, x_rotation_matrix)
                     aug_z_frames = collect_aug_rot(frames, z_rotation_matrix)
 
-                    # torch.save(aug_x_frames, f'{preprocess_folder}/{vid_prefix}_rot_x={degree}.pt')
-                    # torch.save(aug_z_frames, f'{preprocess_folder}/{vid_prefix}_rot_z={degree}.pt')
+                    torch.save(aug_x_frames, f'{preprocess_folder}/{vid_prefix}_rot_x={degree}.pt')
+                    torch.save(aug_z_frames, f'{preprocess_folder}/{vid_prefix}_rot_z={degree}.pt')
                 elif 'z=' in vid_prefix:
                     x_rotation_matrix = get_rotation_matrix_x(t1)
                     y_rotation_matrix = get_rotation_matrix_y(t1)
@@ -230,13 +244,13 @@ def main():
                     aug_x_frames = collect_aug_rot(frames, x_rotation_matrix)
                     aug_y_frames = collect_aug_rot(frames, y_rotation_matrix)
 
-                    # torch.save(aug_x_frames, f'{preprocess_folder}/{vid_prefix}_rot_x={degree}.pt')
-                    # torch.save(aug_y_frames, f'{preprocess_folder}/{vid_prefix}_rot_y={degree}.pt')
+                    torch.save(aug_x_frames, f'{preprocess_folder}/{vid_prefix}_rot_x={degree}.pt')
+                    torch.save(aug_y_frames, f'{preprocess_folder}/{vid_prefix}_rot_y={degree}.pt')
                 else:
                     print(vid_prefix)
                     print('Skipping this video')
         '''
-    
+
     end_time = time.time()
     print("\nTotal Matrix Augmentation Time (s): ", end_time - start_time)
 
