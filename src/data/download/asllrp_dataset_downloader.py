@@ -221,9 +221,11 @@ def save_english_word_links():
 
 def get_dataset_words_endpoints():
     # 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-    top_100 = ['how', 'what', 'who', 'why', 'when', 'where', 'which']
+    top_100 = ['afternoon', 'answer', 'big', 'buy', 'can', 'day']
+    #  'evening', 'excuse', 'forget', 'give', 'hear', 'here', 'know', 'left', 'love', 'month', 'morning', 'name', 'night', 'out', 'question', 'read', 'remember', 'right', 'see', 'sell', 'small', 'take', 'think', 'time', 'today', 'tomorrow', 'understand', 'week', 'with', 'write', 'wrong', 'yesterday']
+    # ['how', 'what', 'who', 'why', 'when', 'where', 'which']
     # {'afternoon', 'answer', 'bad', 'big', 'buy', 'bye', 'can', 'day', 'easy', 'evening', 'excuse me', 'forget', 'give', 'good', 'happy', 'hear', 'hello', 'here', 'in', 'know', 'left', 'like', 'love', 'me', 'meet', 'month', 'more', 'morning', 'name', 'night', 'no', 'out', 'please', 'question', 'read', 'remember', 'right', 'sad', 'see', 'sell', 'she', 'small', 'sorry', 'take', 'thank you', 'think', 'time', 'today', 'tomorrow', 'understand', 'want', 'week', 'what', 'when', 'where', 'which', 'who', 'why', 'with', 'write', 'wrong', 'yes', 'yesterday', 'you'}
-    with open('question_links.txt', 'w') as top_100_file:
+    with open('last_38.txt', 'w') as top_100_file:
         with open('asl_words_en_translation_links.txt', 'r') as asl_file:
             i = 0
             for line in asl_file:
@@ -243,4 +245,5 @@ def get_dataset_words_endpoints():
 
 # Script entry point
 # get_endpoints()
-download_from_endpoints()
+# download_from_endpoints()
+get_dataset_words_endpoints()
