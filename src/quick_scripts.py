@@ -391,3 +391,17 @@ for action in os.listdir('../inputs/interim'):
         
     # print(i, total,  "\n")
 '''
+
+import os
+total = 0
+for action in os.listdir('../inputs/interim-2'):
+    if action == '0':
+        for vid in os.listdir(f'../inputs/interim-2/{action}'):
+            if '_scale' in vid or '_rot' in vid:
+                # print(f'inputs/interim/{action}/{vid}')
+                # os.remove(f'../inputs/interim-2/{action}/{vid}')
+                print('hello')
+            else:
+                total += 1
+        
+print(total,  "\n")
