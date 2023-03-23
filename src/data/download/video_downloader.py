@@ -53,7 +53,8 @@ def save_video_mp4(vid_frames, vid_dest, vid_fps, vid_dim):
 
 def download_aslpro(url, dirname, video_id):
     saveto = os.path.join(dirname, f'{video_id}.swf')
-    if os.path.exists(saveto):
+    saveto_mp4 = os.path.join(dirname, f'{video_id}.mp4')
+    if os.path.exists(saveto) or os.path.exists(saveto_mp4):
         print(f'{video_id} exists at {save_to}')
         return 
 
@@ -61,7 +62,6 @@ def download_aslpro(url, dirname, video_id):
     save_video(data, saveto)
 
     # Convert swf to mp4
-    saveto_mp4 = os.path.join(dirname, f'{video_id}.mp4')
     convert_swf_mp4_cmd = f'ffmpeg -loglevel panic -i {saveto} -vf pad="width=ceil(iw/2)*2:height=ceil(ih/2)*2" {saveto_mp4}'
     os.system(convert_swf_mp4_cmd)
     os.remove(saveto)
@@ -75,7 +75,7 @@ def download_others(url, dirname, video_id):
     data = request_video(url)
     save_video(data, saveto)
 
-def download_youtube(url, dirname, video_id, start_frame, end_frame):
+def download_youtube(url, dirname, video_id, start_frame, end_frame, fps):
     vid_file = os.path.join(dirname, f'{video_id}.mp4')
     if os.path.exists(vid_file):
         print(f'{video_id} exists at {dirname}')
@@ -93,17 +93,15 @@ def download_youtube(url, dirname, video_id, start_frame, end_frame):
         print(f'Download part of video: {start_frame}, {end_frame}')
 
         cap = cv2.VideoCapture(vid_file)
-        count = 1
         frames = []
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
 
-            if start_frame <= count and (end_frame >= count or end_frame == -1):
+            count = cap.get(cv2.CAP_PROP_POS_MSEC) * fps / 1000 
+            if start_frame <= count and (end_frame > count or end_frame == -1):
                 frames.append(frame)
-            
-            count += 1
 
         fps = cap.get(cv2.CAP_PROP_FPS)
         height, width, _ = frames[0].shape
@@ -118,15 +116,18 @@ def download_videos(indexfile, saveto):
     json_file = open(indexfile)
     content = json.load(json_file)
     
-    sign_words = ['hello', 'bye', 'me/I', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'he/she/they', 'bad', 'happy', 'sad', 'sorry', 'like', 'want', 'easy', 'meet', 'more', 'today']
-    new_sign_words = ['hello', 'bye', 'me', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'she']
-    # Next words: again/repeat, fine, learn, sign
-    #['a', 'b', 'c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-    # Note: c is missing in words
+    sign_words = ['hello', 'bye', 'me/I', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'he/she/they', 'bad', 'happy', 'sad', 'sorry', 'like', 'want', 'easy', 'meet', 'more', 'today', 'why']
+    new_sign_words = ['hello', 'bye', 'me', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'she', 'bad', 'happy', 'sad', 'sorry', 'like', 'want', 'easy', 'meet', 'more', 'today', 'why']
+    # ['hello', 'bye', 'me', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'she', 'bad', 'happy', 'sad', 'sorry', 'like', 'want', 'easy', 'meet', 'more', 'today']
+
+    # ['a', 'b', 'c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+   
+    # Next 5 words: again/repeat, less, learn, sign, done/finish
+    # Note: c, l, x, y, z missing in words
 
     if not os.path.exists(saveto):
         os.mkdir(saveto)
-    
+
     for entry in content:
         gloss = entry['gloss']
         if gloss in new_sign_words:
@@ -141,13 +142,14 @@ def download_videos(indexfile, saveto):
                 video_id = gloss + "_" + inst['video_id']
                 start_frame = inst['frame_start']
                 end_frame = inst['frame_end']
+                fps = inst['fps']
                 print(f'video: {video_id}')
 
                 try:
                     if 'aslpro' in video_url:
                         download_aslpro(video_url, new_saveto, video_id)
                     elif 'youtube' in video_url or 'youtu.be' in video_url:
-                        download_youtube(video_url, new_saveto, video_id, start_frame, end_frame)
+                        download_youtube(video_url, new_saveto, video_id, start_frame, end_frame, fps)
                     else:
                         download_others(video_url, new_saveto, video_id)
 
@@ -167,3 +169,24 @@ def download_videos(indexfile, saveto):
 if __name__ == '__main__':
     download_videos(DATASET_VIDEOS_INDEX_FILE, SAVE_VIDEOS_FOLDER)
 
+def remove_bad_videos():
+    sign_words = ['hello', 'bye', 'me', 'you', 'good', 'yes', 'no', 'thank you', 'please', 'she', 'bad', 'happy', 'sad', 'sorry', 'like', 'want', 'easy', 'meet', 'more', 'today', 'why']
+
+    json_file = open(DATASET_VIDEOS_INDEX_FILE)
+    content = json.load(json_file)
+    
+    for entry in content:
+        gloss = entry['gloss']
+        if gloss in sign_words:
+            instances = entry['instances']
+            for inst in instances:
+                if inst['frame_start'] > 2 or inst['frame_end'] != -1:
+                    vid_name = (gloss + "_" + inst['video_id'] + '.mp4')
+                    if os.path.exists(f'{SAVE_VIDEOS_FOLDER}/{gloss}/{vid_name}'):
+                        print(f'Removing raw {vid_name}')
+                        os.remove(f'{SAVE_VIDEOS_FOLDER}/{gloss}/{vid_name}')
+
+                    vid_name_pt = (gloss + "_" + inst['video_id'] + '.pt')
+                    if os.path.exists(f'../../../inputs/interim/{gloss}/{vid_name_pt}'):
+                        print(f'Removing interim {vid_name_pt}')
+                        os.remove(f'../../../inputs/interim/{gloss}/{vid_name_pt}')

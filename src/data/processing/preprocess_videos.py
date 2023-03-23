@@ -40,13 +40,13 @@ import mediapipe as mp
 from matplotlib import pyplot as plt
 from os import listdir, makedirs, path  
 
-DATA_PATH = "../../../live_data"
-PREPROCESS_PATH = "../../../preprocess-me"
+DATA_PATH = "../../../inputs/raw"
+PREPROCESS_PATH = "../../../inputs/interim"
 
-# Total landmarks: 21*3 * 2 (L/R Hands) + 25 * 4 (Pose)
-NUM_LANDMARKS = 226 
+# Total landmarks: 21*3 * 2 (L/R Hands) + 25*3 (Pose)
+NUM_LANDMARKS = 201 
 HAND_LANDMARKS = 21 * 3
-POSE_LANDMARKS = 25 * 4
+POSE_LANDMARKS = 25 * 3
 
 # Process and convert video to landmarks array
 def processing_data(cap, holistic):
@@ -75,7 +75,7 @@ def processing_data(cap, holistic):
 
         # No hand detected
         if not results.left_hand_landmarks:
-            left_hand = torch.zeros(21 * 3)
+            left_hand = torch.zeros(HAND_LANDMARKS)
         # Hand detected
         else:
             # Add left hand keypoints (21 w/ 3d coordinates)
@@ -87,7 +87,7 @@ def processing_data(cap, holistic):
                 left_hand[shift_ind + 2] = landmark.z            
     
         if not results.right_hand_landmarks:
-            right_hand = torch.zeros(21 * 3)
+            right_hand = torch.zeros(HAND_LANDMARKS)
         else:
             # Add right hand keypoints (21 w/ 3d coordinates)
             rh = results.right_hand_landmarks
@@ -99,21 +99,20 @@ def processing_data(cap, holistic):
 
         # No pose detected
         if not results.pose_landmarks:
-            pose = torch.zeros(25 * 4)
+            pose = torch.zeros(POSE_LANDMARKS)
         # Pose detected
         else:
-            # Add pose keypoints (25 w/ 3d coordinates plus visbility probability)
+            # Add pose keypoints (25 w/ 3d coordinates)
             pl = results.pose_landmarks
             for k, landmark in enumerate(pl.landmark):
                 # Ignore lower body (landmarks #25-33)
                 if k >= 25:
                     break
 
-                shift_ind = k * 4
+                shift_ind = k * 3
                 pose[shift_ind] = landmark.x
                 pose[shift_ind + 1] = landmark.y
                 pose[shift_ind + 2] = landmark.z  
-                pose[shift_ind + 3] = landmark.visibility  
 
         # Add processed frames, each as tensor
         processed_frames.append(torch.cat([left_hand, right_hand, pose], 0))
@@ -130,14 +129,15 @@ def main():
 
     # Instantiate holistic model, specifying minimum detection and tracking confidence levels
     holistic = mp_holistic.Holistic(
-        static_image_mode=True,
+        static_image_mode=False,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5) 
 
     # Get all actions/gestures names
     actions = listdir(DATA_PATH)
-    for action in actions:
-        print(f"\n--- Starting {action} preprocessing ---")
+    num_actions = len(actions)
+    for i, action in enumerate(actions):
+        print(f"\n--- Starting {action} preprocessing ({i + 1}/{num_actions}) ---")
         preprocess_folder = f"{PREPROCESS_PATH}/{action}"
         if not path.exists(preprocess_folder):
             makedirs(preprocess_folder)
@@ -149,6 +149,10 @@ def main():
         # Preprocess video by video
         for video in videos:
             vid_name = video.split(".")[0]
+            # Skip already processed videos
+            if path.exists(f'{preprocess_folder}/{vid_name}.pt'):
+                continue
+
             print(f"\n-- Preprocessing video {vid_name} --")
 
             # Open sign language video file capture
@@ -159,7 +163,7 @@ def main():
             print(f"Processed: {len(processed_frames)}")
 
             # Save processed data as torch file
-            torch.save(processed_frames, f'{preprocess_folder}/{vid_name}.pt')
+            # torch.save(processed_frames, f'{preprocess_folder}/{vid_name}.pt')
 
             # Close sign language video file capture
             cap.release()
@@ -167,4 +171,55 @@ def main():
     end_time = time.time()
     print("\nTotal Video to Landmarks Preprocessing Time (s): ", end_time - start_time)
 
-main()
+# main()
+
+'''
+# Get Mediapipe holistic solution
+mp_holistic = mp.solutions.holistic
+
+# Instantiate holistic model, specifying minimum detection and tracking confidence levels
+holistic = mp_holistic.Holistic(
+    static_image_mode=False,
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5) 
+
+# Open sign language video file capture
+cap = cv2.VideoCapture(f"{DATA_PATH}/bad/bad_04694_trans_x_y.mp4")
+
+# Processing video using frames
+processed_frames = processing_data(cap, holistic)
+print(f"Processed: {len(processed_frames)}")
+
+# Save processed data as torch file
+torch.save(processed_frames, f'{PREPROCESS_PATH}/bad_04694_trans_x_y.pt')
+
+'''
+cc_arr = torch.load(f"{PREPROCESS_PATH}/bad_04694_trans_x_y.pt")
+none_arr = torch.load(f"{PREPROCESS_PATH}/bad/bad_04694.pt")
+
+# for cf in cc_arr:
+#     cf = torch.reshape(cf, (67, 3))
+# for nf in none_arr:
+#     nf = torch.reshape(nf, (67, 3))
+
+# with open(f"{PREPROCESS_PATH}/compare_files.txt", 'w') as fl:
+# for i, row in enumerate(cc_arr):
+# for i in range(1, 10):
+#     print(none_arr[i][63] - none_arr[i - 1][63])
+# print(
+# '\n'
+# )
+# for i in range(1, 10):
+#     print(cc_arr[i][63] - cc_arr[i - 1][63])
+
+print(torch.reshape(none_arr[12], (67, 3)))
+print('\n')
+print(torch.reshape(cc_arr[12], (67, 3)))
+
+for i in range(40):
+    print(i, torch.reshape(none_arr[i], (67, 3))[24] - torch.reshape(cc_arr[i], (67, 3))[24])
+
+
+# torch.save(cc_arr, f"{PREPROCESS_PATH}/bad_04694_crop_cc.txt")
+# torch.save(none_arr, f"{PREPROCESS_PATH}/bad_04694.txt")
+# fl.write(torch.reshape(none_arr[i], (67, 3)))

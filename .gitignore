@@ -13,6 +13,7 @@ __pycache__/*
 # Data files not ready to be pushed
 history/*
 inputs/raw/*
+inputs/raw-2/*
 runs/*
 ali/*
 dataset_joint/*
@@ -24,3 +25,17 @@ live_test/*
 preprocess/*
 preprocess-me/*
 recorded_test/*
+inputs/temp/*
+inputs/top_62_rotated/*
+inputs/top_62_scaled/*
+inputs/top_62_extra_rot/*
+inputs/interim/*
+inputs/interim-2/*
+
+tests/live_data_aug_ali/*
+
+src/data/download/new_asl_words_links.txt
+src/data/download/num_links.txt
+src/data/download/question_links.txt
+src/data/download/top_100_words_endpoints.txt
+src/data/download/last_38.txt

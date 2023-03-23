@@ -2,7 +2,8 @@
 Fit data instances to 48 frames for training and testing neural network
 - Create new directory to store dataset
 - Load each data instance and compute number of frames
-- Determine 
+- Randomly sample the frames to duplicate or delete
+- Fit data instance by removing additional or inserting duplicate frames
 
 Execution Time: 13s for 5 words
 New Execution Time: 201s for 5 words
@@ -14,12 +15,14 @@ import time
 import random
 import torch
 import math
-from os import listdir, path, makedirs
+from os import listdir, path, makedirs, remove
 
-DATASET_PATH = "../../../dataset_me"
-PREPROCESS_PATH = "../../../preprocess-me"
+# Upload to google cloud bucket: gsutil -m cp -r top_62_extra_rot gs://intera-nn
+# gsutil -m cp -r top_62_scaled gs://intera-nn
+DATASET_PATH = "../../../inputs/dataset"
+PREPROCESS_PATH = "../../../inputs/interim-2"
 
-INPUT_SIZE = 226
+INPUT_SIZE = 201
 NUM_SEQUENCES = 48
 
 def main():
@@ -29,15 +32,20 @@ def main():
 
     # Get all actions/gestures names
     actions = listdir(PREPROCESS_PATH)
-    for action in actions:
-        print(f"\n--- Starting {action} temporal fit ---")
+    num_actions = len(actions)
+    for i, action in enumerate(actions):
+        print(f"\n--- Starting {action} temporal fit ({i + 1}/{num_actions}) ---")
 
         # Get all filenames for temporal fit to 48 frames
         videos = listdir(f"{PREPROCESS_PATH}/{action}")
 
         # Augment video by video
         for video in videos:
-            print(f"\n-- Temporal fit video {video} --")
+            # Skip already fitted videos
+            if path.exists(f'{DATASET_PATH}/{action}_{video}'):
+                continue
+
+            # print(f"\n-- Temporal fit video {video} --")
 
             # Load data instance
             frames = torch.load(f"{PREPROCESS_PATH}/{action}/{video}")
@@ -47,11 +55,17 @@ def main():
             missing_frames = NUM_SEQUENCES - num_frames
 
             if missing_frames == 0:
-                print(f'Data already fitted to {NUM_SEQUENCES} frames')
+                # Adjust format to torch tensors
+                torch_frames = torch.zeros([NUM_SEQUENCES, INPUT_SIZE], dtype=torch.float)
+                for seq, frame in enumerate(frames):
+                    torch_frames[seq] = frame
+                
+                # Save updated frames
+                torch.save(torch_frames, f'{DATASET_PATH}/{action}_{video}')
                 continue
             
             is_over_limit = missing_frames < 0
-            print(f'Problem: {num_frames}')
+            # print(f'Problem: {num_frames}')
 
             # Must select frames manually 
             missing_frames = abs(missing_frames)
@@ -68,7 +82,7 @@ def main():
             
             # Pick frames randomly to remove or duplicate based on data size
             frame_indices = sorted(random.sample(frame_pop, missing_frames), reverse=True)
-            print(frame_indices)
+            # print(frame_indices)
 
             # Data temporal fit
             if is_over_limit:
@@ -87,7 +101,7 @@ def main():
                 torch_frames[seq] = frame
             
             # Save updated frames
-            print(f'Fixed: {len(frames)}')
+            # print(f'Fixed: {len(frames)}')
             torch.save(torch_frames, f'{DATASET_PATH}/{action}_{video}')
 
     end_time = time.time()
